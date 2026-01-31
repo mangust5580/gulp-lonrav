@@ -106,6 +106,24 @@ gulp-lonrav/
 
 ---
 
+## Optional template engines
+
+This build includes pipelines for multiple template engines, but they are **not installed by default** to keep the template minimal.
+
+Install only what you use:
+
+```bash
+npm i -D pug
+# or
+npm i -D ejs
+# or
+npm i -D nunjucks
+# or
+npm i -D handlebars
+```
+
+---
+
 ## Notes
 
 This build is intentionally focused on **classic frontend workflows**:
