@@ -8,7 +8,7 @@ yarn.lock
 
 # build output
 dist/
-public/
+/public/
 
 # build caches
 .cache/
