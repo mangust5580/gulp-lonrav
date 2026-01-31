@@ -1,6 +1,3 @@
-// gulp/utils/cli.js
-// Tiny CLI args helper (no external deps).
-
 /**
  * Returns value for a CLI option.
  * Supports:

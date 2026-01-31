@@ -1,4 +1,3 @@
-// gulp/utils/i18n.js
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -6,9 +5,12 @@ import { features } from '#config/features.js'
 import { i18n as i18nCfg } from '#config/i18n.js'
 import { site } from '#config/site.js'
 
-const normalizeLocale = (l) => String(l || '').trim().toLowerCase()
+const normalizeLocale = l =>
+  String(l || '')
+    .trim()
+    .toLowerCase()
 
-const readJson = (p) => {
+const readJson = p => {
   const abs = path.isAbsolute(p) ? p : path.join(process.cwd(), p)
   const raw = fs.readFileSync(abs, 'utf8')
   return JSON.parse(raw)
@@ -43,7 +45,7 @@ export const getI18nConfig = () => {
   }
 }
 
-export const loadDictionary = (locale) => {
+export const loadDictionary = locale => {
   const cfg = getI18nConfig()
   if (!cfg.enabled) return {}
   const loc = normalizeLocale(locale) || cfg.defaultLocale
@@ -58,7 +60,7 @@ export const createTranslator = ({ locale, dict, strict, ctxLabel }) => {
   const loc = normalizeLocale(locale)
   const isStrict = strict ?? true
 
-  return (key) => {
+  return key => {
     const k = String(key || '')
     const v = getByPath(dict, k)
     if (v == null) {
@@ -76,7 +78,7 @@ export const makeI18nContext = (locale, ctxLabel) => {
   const cfg = getI18nConfig()
   const loc = normalizeLocale(locale) || cfg.defaultLocale
   const dict = cfg.enabled ? loadDictionary(loc) : {}
-  // Если i18n выключен, переводчик всегда non-strict и возвращает key.
+
   const t = createTranslator({
     locale: loc,
     dict,
@@ -94,7 +96,7 @@ export const makeI18nContext = (locale, ctxLabel) => {
   }
 }
 
-export const localePrefix = (locale) => `/${normalizeLocale(locale)}`
+export const localePrefix = locale => `/${normalizeLocale(locale)}`
 
 export const buildUrl = ({ locale, pathname = '' }) => {
   const cfg = getI18nConfig()

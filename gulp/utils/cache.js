@@ -1,7 +1,3 @@
-// gulp/utils/cache.js
-// Minimal persistent JSON cache for expensive build steps.
-// Cross-platform, no external deps.
-
 import path from 'node:path'
 import fs from 'node:fs/promises'
 import fssync from 'node:fs'
@@ -56,8 +52,6 @@ export async function writeMediaIndex(index) {
 }
 
 export function mediaCacheDirFor(kind, relNoExtPosix) {
-  // Mirror src/assets/... structure under .cache/media/{kind}
-  // relNoExtPosix is like: "sub/clip" (no extension)
   const parts = relNoExtPosix.split('/').filter(Boolean)
   return path.join(cachePaths.mediaRoot, kind, ...parts.slice(0, -1))
 }

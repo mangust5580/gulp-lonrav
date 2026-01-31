@@ -1,17 +1,17 @@
-// eslint.config.js
+
 import js from '@eslint/js'
 import globals from 'globals'
 
 export default [
-  // Игноры: артефакты сборки, зависимости
+  
   {
     ignores: ['dist/**', 'public/**', 'node_modules/**'],
   },
 
-  // Базовые правила JS
+  
   js.configs.recommended,
 
-  // Настройки для исходников
+  
   {
     files: ['src/**/*.{js,mjs,cjs}'],
 
@@ -24,12 +24,12 @@ export default [
     },
 
     rules: {
-      // Практичный минимум (можно расширять)
-      'no-console': 'off', // при желании включим в prod/CI
+      
+      'no-console': 'off', 
     },
   },
 
-  // Настройки для Gulp/Node-скриптов (конфиги, задачи)
+  
   {
     files: ['gulp/**/*.{js,mjs}', 'config/**/*.{js,mjs}', '*.js'],
 

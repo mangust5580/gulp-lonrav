@@ -1,6 +1,5 @@
 import { styles } from '#config/styles.js'
 
-// NOTE: keep module imports minimal. Optional engines are resolved dynamically.
 export const stylesPipeline = async () => {
   switch (styles.engine) {
     case 'css': {

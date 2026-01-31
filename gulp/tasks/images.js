@@ -1,11 +1,9 @@
-// gulp/tasks/images.js
 import path from 'node:path'
 import fs from 'node:fs/promises'
 
 import { globSafe, toPosix, isMatch } from '#gulp/utils/glob.js'
 import { logger } from '#gulp/utils/logger.js'
 
-// Lazy-loaded: sharp is only required for production optimization.
 let sharp
 
 import { paths } from '#config/paths.js'
@@ -36,8 +34,8 @@ async function asyncPool(limit, items, iteratorFn) {
 }
 
 function makeExtSets(cfg) {
-  const raster = new Set((cfg.extensions?.raster ?? []).map((e) => e.toLowerCase()))
-  const vector = new Set((cfg.extensions?.vector ?? []).map((e) => e.toLowerCase()))
+  const raster = new Set((cfg.extensions?.raster ?? []).map(e => e.toLowerCase()))
+  const vector = new Set((cfg.extensions?.vector ?? []).map(e => e.toLowerCase()))
   return { raster, vector }
 }
 
@@ -115,9 +113,13 @@ async function processRaster(fileAbs, relFromBase, cfg) {
     } else if (ext === '.gif') {
       await fs.copyFile(fileAbs, path.join(destDir, `${targetBaseName}${ext}`))
     } else if (ext === '.webp') {
-      await img.webp({ quality: webpQ.quality ?? 78 }).toFile(path.join(destDir, `${targetBaseName}.webp`))
+      await img
+        .webp({ quality: webpQ.quality ?? 78 })
+        .toFile(path.join(destDir, `${targetBaseName}.webp`))
     } else if (ext === '.avif') {
-      await img.avif({ quality: avifQ.quality ?? 50 }).toFile(path.join(destDir, `${targetBaseName}.avif`))
+      await img
+        .avif({ quality: avifQ.quality ?? 50 })
+        .toFile(path.join(destDir, `${targetBaseName}.avif`))
     } else {
       await fs.copyFile(fileAbs, path.join(destDir, `${targetBaseName}${ext}`))
     }
@@ -141,7 +143,10 @@ async function processRaster(fileAbs, relFromBase, cfg) {
 
   if (retinaEnabled && gen1xFrom2x && isRetina2x(fileAbs, retinaSuffix)) {
     const oneXBase = stripRetinaSuffix(baseName, retinaSuffix)
-    await writeOptimized(oneXBase, Number.isFinite(retinaScale) && retinaScale > 0 ? retinaScale : 2)
+    await writeOptimized(
+      oneXBase,
+      Number.isFinite(retinaScale) && retinaScale > 0 ? retinaScale : 2,
+    )
   }
 }
 
@@ -162,9 +167,8 @@ export const imagesTask = async () => {
     const excludeOptimize = images.exclude?.optimize ?? []
     const excludeFormats = images.exclude?.generateFormats ?? []
 
-    // DEV: copy raster 1:1 (fast)
     if (!env.isProd) {
-      await asyncPool(cfg.concurrency ?? 16, files, async (abs) => {
+      await asyncPool(cfg.concurrency ?? 16, files, async abs => {
         const rel = path.relative(base, abs)
         const ext = path.extname(abs).toLowerCase()
         if (!RASTER_EXTS.has(ext)) return
@@ -175,11 +179,10 @@ export const imagesTask = async () => {
       return
     }
 
-    // PROD: optimize/convert raster only (requires sharp)
     sharp = await lazyDefault('sharp')
     if (!sharp) throw new Error('[images] Failed to load sharp.')
 
-    await asyncPool(cfg.concurrency ?? 6, files, async (abs) => {
+    await asyncPool(cfg.concurrency ?? 6, files, async abs => {
       const rel = path.relative(base, abs)
       const relPosix = toPosix(rel)
       const ext = path.extname(abs).toLowerCase()
@@ -200,10 +203,9 @@ export const imagesTask = async () => {
 
     plugins.browserSync.stream()
   } catch (err) {
-    // Опциональное уведомление + вывод в консоль
     await notifyError({ title: 'images', message: err?.message || String(err) })
     logger.error('images', err?.stack || err?.message || String(err))
-    // В режиме продакшн прерываем сборку
+
     if (env.isProd) throw err
   }
 }

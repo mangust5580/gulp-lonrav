@@ -1,6 +1,3 @@
-// gulp/core/modules.js
-// Backward-compatible facade over the unified module registry.
-
 import { features } from '#config/features.js'
 import { paths } from '#config/paths.js'
 import { toPosix } from '#gulp/utils/glob.js'
@@ -21,7 +18,7 @@ export const getWorkModules = (ctx = { features, paths }) =>
  */
 export const getWatchRules = (ctx = { features, paths }) => {
   const rules = getEnabledWatchRules(ctx)
-  return rules.map((r) => ({
+  return rules.map(r => ({
     key: r.key,
     globs: Array.isArray(r.globs) ? r.globs.map(toPosix) : toPosix(r.globs),
     task: r.task,

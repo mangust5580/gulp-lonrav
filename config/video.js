@@ -1,15 +1,12 @@
-// config/video.js
-import { env } from '#gulp/utils/env.js'
+import {env} from '#gulp/utils/env.js'
 
 export const video = {
   outSubdir: 'video',
   concurrency: env.isProd ? 2 : 1,
 
-  // Transcode targets
   webm: {
     enabled: true,
     ext: '.webm',
-    // VP9 + Opus
     args: env.isProd
       ? [
         '-c:v', 'libvpx-vp9',
@@ -37,8 +34,6 @@ export const video = {
   mp4: {
     enabled: true,
     ext: '.mp4',
-    // H.264 + AAC (универсальный fallback)
-    // Важно: yuv420p и faststart для прогрессивной загрузки
     args: env.isProd
       ? [
         '-c:v', 'libx264',

@@ -1,4 +1,3 @@
-// gulp/tasks/svg-sprite.js
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -30,14 +29,11 @@ function makeIdFromFilePath(filePathAbs) {
 function makeConfig() {
   const spriteName = svg.sprite?.filename ?? 'sprite.svg'
 
-  // dev — быстро, prod — можно включить svgo (оставляем управляемым через config/svg.js)
-  const doOptimize = env.isProd ? Boolean(svg.sprite?.optimize?.prod) : Boolean(svg.sprite?.optimize?.dev)
+  const doOptimize = env.isProd
+    ? Boolean(svg.sprite?.optimize?.prod)
+    : Boolean(svg.sprite?.optimize?.dev)
 
-  // gulp-svg-sprite (svg-sprite) использует svgo v2.x.
-  // Наши конфиги (config/svg.js) заданы в формате svgo v4 (plugins: [{ name, active }]).
-  // Поэтому для sprite адаптируем конфиг к синтаксису svgo v2, чтобы не получать
-  // ошибки вида "Unknown builtin plugin ...".
-  const toSvgo2Config = (cfg) => {
+  const toSvgo2Config = cfg => {
     const input = cfg && typeof cfg === 'object' ? cfg : {}
     const out = {
       multipass: Boolean(input.multipass),
@@ -46,8 +42,7 @@ function makeConfig() {
 
     const pluginsIn = Array.isArray(input.plugins) ? input.plugins : []
 
-    // svgo v4 style: [{ name: 'removeViewBox', active: false }, ...]
-    const isV4Style = pluginsIn.some((p) => p && typeof p === 'object' && 'name' in p)
+    const isV4Style = pluginsIn.some(p => p && typeof p === 'object' && 'name' in p)
 
     if (isV4Style) {
       for (const p of pluginsIn) {
@@ -55,18 +50,13 @@ function makeConfig() {
         const name = p.name
         if (!name) continue
 
-        // preset-default не существует в svgo v2 как единый плагин
         if (name === 'preset-default') continue
 
-        // svgo v2 использует cleanupIDs (ID заглавными)
         const normalizedName = name === 'cleanupIds' ? 'cleanupIDs' : name
 
-        // svgo v2 ожидает объекты вида { name, active, params }
         const active = 'active' in p ? Boolean(p.active) : true
         const params = 'params' in p ? p.params : undefined
 
-        // svgo v2: если плагин включён — достаточно { name }.
-        // active добавляем только когда нужно явно выключить.
         const pluginCfg = { name: normalizedName }
         if (active === false) pluginCfg.active = false
         if (params && typeof params === 'object') pluginCfg.params = params
@@ -74,39 +64,48 @@ function makeConfig() {
         out.plugins.push(pluginCfg)
       }
 
-      // гарантируем, что viewBox не удалится (важно для иконок)
-      out.plugins = out.plugins.filter((x) => x && typeof x.name === 'string' && x.name.length > 0)
+      out.plugins = out.plugins.filter(x => x && typeof x.name === 'string' && x.name.length > 0)
 
-      const hasRemoveViewBox = out.plugins.some((x) => x && x.name === 'removeViewBox')
-      if (!hasRemoveViewBox) out.plugins.push({ name: 'removeViewBox', active: false })
+      const hasRemoveViewBox = out.plugins.some(x => x && x.name === 'removeViewBox')
+      if (!hasRemoveViewBox)
+        out.plugins.push({
+          name: 'removeViewBox',
+          active: false,
+        })
 
       return out
     }
 
-    // svgo v2 style уже передан. Нормализуем к { name, active } где возможно,
-    // чтобы svg-sprite/svgo v2 не ругались "Plugin name should be specified".
     out.plugins = pluginsIn
-      .map((p) => {
+      .map(p => {
         if (!p) return null
         if (typeof p === 'string') return { name: p }
         if (typeof p !== 'object') return null
         if ('name' in p) return p
 
-        // shorthand: { removeViewBox: false } -> { name: 'removeViewBox', active: false }
         const keys = Object.keys(p)
         if (keys.length !== 1) return null
         const k = keys[0]
         const v = p[k]
-        if (typeof v === 'boolean') return v === false ? { name: k, active: false } : { name: k }
+        if (typeof v === 'boolean')
+          return v === false
+            ? {
+                name: k,
+                active: false,
+              }
+            : { name: k }
         return { name: k, params: v }
       })
       .filter(Boolean)
 
-    // всегда сохраняем viewBox
-    out.plugins = out.plugins.filter((x) => x && typeof x.name === 'string' && x.name.length > 0)
+    out.plugins = out.plugins.filter(x => x && typeof x.name === 'string' && x.name.length > 0)
 
-    const hasRemoveViewBox2 = out.plugins.some((x) => x && x.name === 'removeViewBox')
-    if (!hasRemoveViewBox2) out.plugins.push({ name: 'removeViewBox', active: false })
+    const hasRemoveViewBox2 = out.plugins.some(x => x && x.name === 'removeViewBox')
+    if (!hasRemoveViewBox2)
+      out.plugins.push({
+        name: 'removeViewBox',
+        active: false,
+      })
 
     return out
   }
@@ -123,9 +122,8 @@ function makeConfig() {
     shape: {
       id: {
         generator: (_name, file) => {
-          // file.path — абсолютный путь до исходного svg
           const id = makeIdFromFilePath(file.path)
-          // поддерживаем ваш текущий префикс
+
           const prefix = svg.sprite?.symbolIdPrefix ?? 'icon-'
           return `${prefix}${id}`
         },
@@ -133,19 +131,15 @@ function makeConfig() {
 
       transform: doOptimize
         ? [
-          {
-            svgo: toSvgo2Config(
-              svg.sprite?.optimize?.svgoConfig ?? {
-                multipass: true,
-                plugins: [
-                  // дефолт для sprite: не трогаем viewBox и IDs
-                  { removeViewBox: false },
-                  { cleanupIDs: false },
-                ],
-              },
-            ),
-          },
-        ]
+            {
+              svgo: toSvgo2Config(
+                svg.sprite?.optimize?.svgoConfig ?? {
+                  multipass: true,
+                  plugins: [{ removeViewBox: false }, { cleanupIDs: false }],
+                },
+              ),
+            },
+          ]
         : [],
     },
 
@@ -161,7 +155,6 @@ export const svgSpriteTask = () => {
     const enabled = Boolean(features?.svgSprite?.enabled) && (svg?.sprite?.enabled ?? true)
     if (!enabled) return Promise.resolve()
 
-    // ✅ если папки нет — не падаем
     if (!fs.existsSync(paths.assets.iconsBase)) return Promise.resolve()
 
     const outDir = path.join(paths.out, svg.sprite?.outSubdir ?? 'images')

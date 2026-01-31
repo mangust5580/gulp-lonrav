@@ -1,4 +1,3 @@
-// gulp/tasks/seo.js
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
@@ -12,13 +11,16 @@ import { features } from '#config/features.js'
 import { seo } from '#config/seo.js'
 import { getI18nConfig } from '#gulp/utils/i18n.js'
 
-const getSiteUrl = () => String(seo.url?.siteUrl || '').trim().replace(/\/+$/g, '')
+const getSiteUrl = () =>
+  String(seo.url?.siteUrl || '')
+    .trim()
+    .replace(/\/+$/g, '')
 
 const isCI = Boolean(process.env.CI)
 
 const shouldRequireSiteUrl = () => {
   const rule = features.seo?.requireSiteUrl
-  // по умолчанию: CI — строго, локально — мягко
+
   if (isCI) return rule?.ci !== false
   return Boolean(rule?.local)
 }
@@ -26,11 +28,11 @@ const shouldRequireSiteUrl = () => {
 const basePath = () => normalizeBasePath(seo.url?.basePath || '')
 
 const urlForRelHtml = (siteUrl, relHtml) => {
-  // relHtml comes from filesystem/glob and may contain Windows backslashes
-  const rel = String(relHtml || '').replace(/\\/g, '/').replace(/^\/+/, '')
+  const rel = String(relHtml || '')
+    .replace(/\\/g, '/')
+    .replace(/^\/+/, '')
   let urlPath = `/${rel}`.replace(/\/+/g, '/')
 
-  // index.html → directory URL
   if (urlPath.endsWith('/index.html')) {
     urlPath = urlPath.replace(/index\.html$/, '')
   }
@@ -42,7 +44,6 @@ const urlForRelHtml = (siteUrl, relHtml) => {
 export const seoTask = async () => {
   if (!features.seo?.enabled) return
 
-  // robots.txt
   if (features.seo.robots) {
     const robotsPath = path.join(paths.out, 'robots.txt')
     if (seo.robots?.content) {
@@ -54,7 +55,6 @@ export const seoTask = async () => {
     }
   }
 
-  // sitemap
   if (!features.seo.sitemap) return
 
   const siteUrl = getSiteUrl()
@@ -64,7 +64,9 @@ export const seoTask = async () => {
       'Set SITE_URL and SITE_BASE_PATH (or config/site.js) to enable sitemap/hreflang generation.'
 
     if (shouldRequireSiteUrl()) {
-      throw new Error('[seo] site.siteUrl is required to generate sitemap/hreflang. Set it in config/site.js.')
+      throw new Error(
+        '[seo] site.siteUrl is required to generate sitemap/hreflang. Set it in config/site.js.',
+      )
     }
 
     logger.warn('seo', msg)
@@ -72,10 +74,12 @@ export const seoTask = async () => {
   }
 
   const i18n = getI18nConfig()
-  const htmlFiles = await globSafe('**/*.html', { cwd: paths.out, onlyFiles: true })
+  const htmlFiles = await globSafe('**/*.html', {
+    cwd: paths.out,
+    onlyFiles: true,
+  })
   if (!htmlFiles.length) return
 
-  // Генерация per-locale + index, если i18n включен и mode=index
   const mode = seo.sitemap?.mode || 'index'
   const cfgFreq = seo.sitemap?.changefreq || 'weekly'
   const cfgPriority = seo.sitemap?.priority ?? 0.5
@@ -83,7 +87,11 @@ export const seoTask = async () => {
   const writeSitemap = async (filename, relList) => {
     const sm = new SitemapStream({ hostname: siteUrl })
     for (const rel of relList) {
-      sm.write({ url: urlForRelHtml(siteUrl, rel).replace(siteUrl, ''), changefreq: cfgFreq, priority: cfgPriority })
+      sm.write({
+        url: urlForRelHtml(siteUrl, rel).replace(siteUrl, ''),
+        changefreq: cfgFreq,
+        priority: cfgPriority,
+      })
     }
     sm.end()
     const xml = await streamToPromise(sm)
@@ -98,7 +106,6 @@ export const seoTask = async () => {
       const maybe = parts[0]
       if (byLocale.has(maybe)) byLocale.get(maybe).push(rel)
       else {
-        // на всякий случай складываем в defaultLocale
         byLocale.get(i18n.defaultLocale)?.push(rel)
       }
     }
@@ -111,11 +118,12 @@ export const seoTask = async () => {
       indexEntries.push(filename)
     }
 
-    // sitemap index
     const lines = [
       '<?xml version="1.0" encoding="UTF-8"?>',
       '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-      ...indexEntries.map((f) => `  <sitemap><loc>${siteUrl}${basePath()}/${f}</loc></sitemap>`.replace(/\/+/g, '/')),
+      ...indexEntries.map(f =>
+        `  <sitemap><loc>${siteUrl}${basePath()}/${f}</loc></sitemap>`.replace(/\/+/g, '/'),
+      ),
       '</sitemapindex>',
       '',
     ]
@@ -123,6 +131,5 @@ export const seoTask = async () => {
     return
   }
 
-  // single sitemap
   await writeSitemap('sitemap.xml', htmlFiles)
 }

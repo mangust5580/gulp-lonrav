@@ -1,4 +1,3 @@
-// gulp/pipelines/templates/html/minify.js
 import through2 from 'through2'
 import { minify } from 'html-minifier-terser'
 

@@ -1,4 +1,4 @@
-// stylelint.config.js
+
 export default {
   extends: [
     'stylelint-config-standard',
@@ -13,11 +13,11 @@ export default {
   ],
 
   rules: {
-    // Практичный минимум для SCSS-проектов
-    'no-descending-specificity': null, // часто мешает на реальных BEM-структурах
-    'selector-class-pattern': null,     // не навязываем regex на классы (BEM/не BEM)
+    
+    'no-descending-specificity': null, 
+    'selector-class-pattern': null,     
 
-    // SCSS: разрешаем директивы/ат-правила без "Unknown"
+    
     'at-rule-no-unknown': null,
     'scss/at-rule-no-unknown': true,
   },

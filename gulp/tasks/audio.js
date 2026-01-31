@@ -1,4 +1,3 @@
-// gulp/tasks/audio.js
 import path from 'node:path'
 import fs from 'node:fs/promises'
 import fssync from 'node:fs'
@@ -25,7 +24,6 @@ import {
   ensureFileExists,
 } from '#gulp/utils/cache.js'
 
-// Loaded lazily only when the module is enabled and there is real work to do.
 let ffmpegPath = null
 
 async function ensureDir(dirAbs) {
@@ -48,7 +46,6 @@ async function shouldBuild(inputAbs, outputAbs) {
   return inSt.mtimeMs > outSt.mtimeMs
 }
 
-
 async function copyTarget(inputAbs, outAbs) {
   if (!(await shouldBuild(inputAbs, outAbs))) return
   await ensureDir(path.dirname(outAbs))
@@ -65,12 +62,12 @@ function runFfmpeg(args) {
     const p = spawn(ffmpegPath, ['-y', ...args], { stdio: ['ignore', 'ignore', 'pipe'] })
     let stderr = ''
 
-    p.stderr.on('data', (d) => {
+    p.stderr.on('data', d => {
       stderr += String(d)
     })
 
     p.on('error', reject)
-    p.on('close', (code) => {
+    p.on('close', code => {
       if (code === 0) resolve()
       else reject(new Error(`audioTask: ffmpeg failed (code ${code}).\n${stderr}`))
     })
@@ -95,7 +92,10 @@ function loudnormFilter() {
 
 export const audioTask = async () => {
   if (!features.media?.audio?.enabled) {
-    await lazyDefault('ffmpeg-static', { enabled: false, skipLog: '[audio] module disabled → ffmpeg not loaded' })
+    await lazyDefault('ffmpeg-static', {
+      enabled: false,
+      skipLog: '[audio] module disabled → ffmpeg not loaded',
+    })
     return
   }
 
@@ -104,7 +104,6 @@ export const audioTask = async () => {
     : (features.media.audio.buildMode ?? 'transcode')
 
   try {
-    // ✅ папка может отсутствовать — не ломаем сборку
     if (!fssync.existsSync(paths.assets.audioBase)) return
 
     const files = await globSafe(toPosix(paths.assets.audio), {
@@ -115,18 +114,20 @@ export const audioTask = async () => {
     if (!files.length) return
 
     if (mode === 'copy') {
-      // devMode=copy: fast path (no transcode, just copy sources)
-      await lazyDefault('ffmpeg-static', { enabled: false, skipLog: '[audio] devMode=copy → ffmpeg not loaded' })
+      await lazyDefault('ffmpeg-static', {
+        enabled: false,
+        skipLog: '[audio] devMode=copy → ffmpeg not loaded',
+      })
 
       const limit = createLimit(cfg.concurrency ?? 1)
       await Promise.all(
-        files.map((inputAbs) =>
+        files.map(inputAbs =>
           limit(async () => {
             const rel = toPosix(path.relative(paths.assets.audioBase, inputAbs))
             const outAbs = path.join(paths.out, cfg.outSubdir, rel)
             await copyTarget(inputAbs, outAbs)
-          })
-        )
+          }),
+        ),
       )
 
       plugins.browserSync.stream()
@@ -139,12 +140,11 @@ export const audioTask = async () => {
     const limit = createLimit(cfg.concurrency ?? 1)
     const af = loudnormFilter()
 
-    // Persistent cache: speed up repeated builds even though output dirs are cleaned.
     const paramsHash = stableHash({ cfg, af })
     const index = await readMediaIndex()
     index.audio ??= {}
 
-    const requiredOutputs = (baseName) => {
+    const requiredOutputs = baseName => {
       const out = []
       if (cfg.opus?.enabled) out.push(`${baseName}${cfg.opus.ext ?? '.opus'}`)
       if (cfg.mp3?.enabled) out.push(`${baseName}${cfg.mp3.ext ?? '.mp3'}`)
@@ -152,7 +152,7 @@ export const audioTask = async () => {
     }
 
     await Promise.all(
-      files.map((inputAbs) =>
+      files.map(inputAbs =>
         limit(async () => {
           const rel = toPosix(path.relative(paths.assets.audioBase, inputAbs))
           const relNoExt = rel.replace(path.extname(rel), '')
@@ -183,24 +183,28 @@ export const audioTask = async () => {
           if (!hasAll) {
             await ensureDir(cacheDir)
 
-            // 1) Opus (primary)
             if (cfg.opus?.enabled) {
               await runFfmpeg([
-                '-i', inputAbs,
+                '-i',
+                inputAbs,
                 ...(af ? ['-af', af] : []),
-                '-c:a', 'libopus',
-                '-b:a', cfg.opus.bitrate ?? '96k',
+                '-c:a',
+                'libopus',
+                '-b:a',
+                cfg.opus.bitrate ?? '96k',
                 path.join(cacheDir, `${baseName}${cfg.opus.ext ?? '.opus'}`),
               ])
             }
 
-            // 2) MP3 (fallback)
             if (cfg.mp3?.enabled) {
               await runFfmpeg([
-                '-i', inputAbs,
+                '-i',
+                inputAbs,
                 ...(af ? ['-af', af] : []),
-                '-c:a', 'libmp3lame',
-                '-q:a', String(cfg.mp3.vbrQuality ?? 3),
+                '-c:a',
+                'libmp3lame',
+                '-q:a',
+                String(cfg.mp3.vbrQuality ?? 3),
                 path.join(cacheDir, `${baseName}${cfg.mp3.ext ?? '.mp3'}`),
               ])
             }
@@ -211,8 +215,8 @@ export const audioTask = async () => {
           for (const fileName of req) {
             await fs.copyFile(path.join(cacheDir, fileName), path.join(outDir, fileName))
           }
-        })
-      )
+        }),
+      ),
     )
 
     await writeMediaIndex(index)

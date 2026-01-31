@@ -1,6 +1,3 @@
-// gulp/core/registry.js
-// Single source of truth for build modules (tasks + watch), enablement, and execution plan.
-
 import { STAGES } from '#gulp/constants.js'
 
 import { templatesTask } from '#gulp/tasks/templates.js'
@@ -33,7 +30,7 @@ import { profileTask } from '#gulp/core/profiler.js'
  * }} Module
  */
 
-const stageToTaskKey = (stage) => (stage === STAGES.BUILD_FAST ? STAGES.BUILD : stage)
+const stageToTaskKey = stage => (stage === STAGES.BUILD_FAST ? STAGES.BUILD : stage)
 
 const pickTask = (tasks, stage) => {
   if (!tasks) return null
@@ -41,9 +38,10 @@ const pickTask = (tasks, stage) => {
   return tasks[key] || null
 }
 
-const byOrder = (a, b) => (a.order ?? 0) - (b.order ?? 0) || String(a.id).localeCompare(String(b.id))
+const byOrder = (a, b) =>
+  (a.order ?? 0) - (b.order ?? 0) || String(a.id).localeCompare(String(b.id))
 
-const dependsOnPolicy = (stage) => (stage === STAGES.DEV ? 'warn' : 'error')
+const dependsOnPolicy = stage => (stage === STAGES.DEV ? 'warn' : 'error')
 
 const reportDependsOnMismatch = ({ stage, moduleId, depId }) => {
   const msg = `Module "${moduleId}" dependsOn "${depId}", but "${depId}" is disabled for stage "${stage}". Either enable "${depId}" or remove/adjust dependsOn.`
@@ -59,11 +57,11 @@ const reportDependsOnMismatch = ({ stage, moduleId, depId }) => {
  * - Some tasks are internally feature-gated, but we still gate them here to keep pipelines minimal.
  * - Watch rules are conservative and match existing behavior.
  */
-export const getModuleRegistry = (ctx) => {
+export const getModuleRegistry = ctx => {
   const f = ctx.features
   const p = ctx.paths
 
-  const prof = (task) => task
+  const prof = task => task
 
   const tTemplates = prof(templatesTask)
   const tStyles = prof(stylesTask)
@@ -85,7 +83,14 @@ export const getModuleRegistry = (ctx) => {
       order: 10,
       tasks: { dev: tTemplates, build: tTemplates, preview: tTemplates },
       enabled: () => true,
-      watch: () => [{ key: 'templates', globs: p.pages.watch, task: tTemplates, action: 'reload' }],
+      watch: () => [
+        {
+          key: 'templates',
+          globs: p.pages.watch,
+          task: tTemplates,
+          action: 'reload',
+        },
+      ],
     },
     {
       id: 'styles',
@@ -93,7 +98,14 @@ export const getModuleRegistry = (ctx) => {
       order: 20,
       tasks: { dev: tStyles, build: tStyles, preview: tStyles },
       enabled: () => true,
-      watch: () => [{ key: 'styles', globs: p.styles.watch, task: tStyles, action: 'task' }],
+      watch: () => [
+        {
+          key: 'styles',
+          globs: p.styles.watch,
+          task: tStyles,
+          action: 'task',
+        },
+      ],
     },
     {
       id: 'scripts',
@@ -101,7 +113,14 @@ export const getModuleRegistry = (ctx) => {
       order: 30,
       tasks: { dev: tScripts, build: tScripts, preview: tScripts },
       enabled: () => true,
-      watch: () => [{ key: 'scripts', globs: p.scripts.watch, task: tScripts, action: 'task' }],
+      watch: () => [
+        {
+          key: 'scripts',
+          globs: p.scripts.watch,
+          task: tScripts,
+          action: 'task',
+        },
+      ],
     },
     {
       id: 'fonts',
@@ -109,7 +128,14 @@ export const getModuleRegistry = (ctx) => {
       order: 40,
       tasks: { dev: tFonts, build: tFonts, preview: tFonts },
       enabled: () => true,
-      watch: () => [{ key: 'fonts', globs: p.fonts.watch, task: tFonts, action: 'reload' }],
+      watch: () => [
+        {
+          key: 'fonts',
+          globs: p.fonts.watch,
+          task: tFonts,
+          action: 'reload',
+        },
+      ],
     },
     {
       id: 'images',
@@ -117,7 +143,14 @@ export const getModuleRegistry = (ctx) => {
       order: 50,
       tasks: { dev: tImages, build: tImages, preview: tImages },
       enabled: () => true,
-      watch: () => [{ key: 'images', globs: p.assets.images, task: tImages, action: 'reload' }],
+      watch: () => [
+        {
+          key: 'images',
+          globs: p.assets.images,
+          task: tImages,
+          action: 'reload',
+        },
+      ],
     },
     {
       id: 'svg',
@@ -125,7 +158,14 @@ export const getModuleRegistry = (ctx) => {
       order: 60,
       tasks: { dev: tSvg, build: tSvg, preview: tSvg },
       enabled: () => true,
-      watch: () => [{ key: 'svg', globs: p.assets.svgs, task: tSvg, action: 'reload' }],
+      watch: () => [
+        {
+          key: 'svg',
+          globs: p.assets.svgs,
+          task: tSvg,
+          action: 'reload',
+        },
+      ],
     },
     {
       id: 'svgSprite',
@@ -133,7 +173,14 @@ export const getModuleRegistry = (ctx) => {
       order: 70,
       tasks: { dev: tSvgSprite, build: tSvgSprite, preview: tSvgSprite },
       enabled: () => Boolean(f.svgSprite?.enabled),
-      watch: () => [{ key: 'svgSprite', globs: p.assets.icons, task: tSvgSprite, action: 'reload' }],
+      watch: () => [
+        {
+          key: 'svgSprite',
+          globs: p.assets.icons,
+          task: tSvgSprite,
+          action: 'reload',
+        },
+      ],
     },
     {
       id: 'favicons',
@@ -141,7 +188,14 @@ export const getModuleRegistry = (ctx) => {
       order: 80,
       tasks: { dev: tFavicons, build: tFavicons, preview: tFavicons },
       enabled: () => Boolean(f.favicons?.enabled),
-      watch: () => [{ key: 'favicons', globs: p.assets.favicons, task: tFavicons, action: 'reload' }],
+      watch: () => [
+        {
+          key: 'favicons',
+          globs: p.assets.favicons,
+          task: tFavicons,
+          action: 'reload',
+        },
+      ],
     },
     {
       id: 'static',
@@ -149,7 +203,14 @@ export const getModuleRegistry = (ctx) => {
       order: 90,
       tasks: { dev: tStatic, build: tStatic, preview: tStatic },
       enabled: () => Boolean(f.static?.enabled),
-      watch: () => [{ key: 'static', globs: p.assets.static, task: tStatic, action: 'reload' }],
+      watch: () => [
+        {
+          key: 'static',
+          globs: p.assets.static,
+          task: tStatic,
+          action: 'reload',
+        },
+      ],
     },
     {
       id: 'media.video',
@@ -157,7 +218,14 @@ export const getModuleRegistry = (ctx) => {
       order: 100,
       tasks: { dev: tVideo, build: tVideo, preview: tVideo },
       enabled: () => Boolean(f.media?.video?.enabled),
-      watch: () => [{ key: 'video', globs: p.assets.video, task: tVideo, action: 'reload' }],
+      watch: () => [
+        {
+          key: 'video',
+          globs: p.assets.video,
+          task: tVideo,
+          action: 'reload',
+        },
+      ],
     },
     {
       id: 'media.audio',
@@ -165,60 +233,72 @@ export const getModuleRegistry = (ctx) => {
       order: 110,
       tasks: { dev: tAudio, build: tAudio, preview: tAudio },
       enabled: () => Boolean(f.media?.audio?.enabled),
-      watch: () => [{ key: 'audio', globs: p.assets.audio, task: tAudio, action: 'reload' }],
+      watch: () => [
+        {
+          key: 'audio',
+          globs: p.assets.audio,
+          task: tAudio,
+          action: 'reload',
+        },
+      ],
     },
   ]
 
-  // Dictionaries affect templates when i18n is enabled
   if (f.i18n?.enabled) {
     modules.push({
       id: 'i18n.locales',
       kind: 'watch',
       order: 5,
       enabled: () => true,
-      watch: () => [{ key: 'locales', globs: 'src/data/locales/**/*.json', task: tTemplates, action: 'reload' }],
+      watch: () => [
+        {
+          key: 'locales',
+          globs: 'src/data/locales/**/*.json',
+          task: tTemplates,
+          action: 'reload',
+        },
+      ],
     })
   }
 
   return validateModuleRegistry(modules)
 }
 
-const getEnabledModules = (ctx) =>
+const getEnabledModules = ctx =>
   getModuleRegistry(ctx)
-    .filter((m) => (m.enabled ? m.enabled(ctx) : true))
+    .filter(m => (m.enabled ? m.enabled(ctx) : true))
     .sort(byOrder)
 
-const getRunnableModules = (ctx) =>
+const getRunnableModules = ctx =>
   getEnabledModules(ctx)
-    .map((m) => ({ m, task: pickTask(m.tasks, ctx.stage) }))
-    .filter((x) => Boolean(x.task))
+    .map(m => ({ m, task: pickTask(m.tasks, ctx.stage) }))
+    .filter(x => Boolean(x.task))
 
-export const getEnabledRunTasks = (ctx) => getRunnableModules(ctx).map((x) => x.task)
+export const getEnabledRunTasks = ctx => getRunnableModules(ctx).map(x => x.task)
 
-export const getEnabledWatchRules = (ctx) =>
-  validateWatchRules(getEnabledModules(ctx).flatMap((m) => (m.watch ? m.watch(ctx) : [])))
+export const getEnabledWatchRules = ctx =>
+  validateWatchRules(getEnabledModules(ctx).flatMap(m => (m.watch ? m.watch(ctx) : [])))
 
 /**
  * Returns compile layers based on dependsOn graph.
  * Each layer can be executed in parallel; layers must run in series.
  */
 
-export const getEnabledCompileIds = (ctx) =>
+export const getEnabledCompileIds = ctx =>
   getEnabledModules(ctx)
-    .filter((m) => m.kind === 'compile' && pickTask(m.tasks, ctx.stage))
-    .map((m) => m.id)
+    .filter(m => m.kind === 'compile' && pickTask(m.tasks, ctx.stage))
+    .map(m => m.id)
 
-export const getCompileLayers = (ctx) => {
+export const getCompileLayers = ctx => {
   const allEnabled = getEnabledModules(ctx)
   const runnableCompile = getRunnableModules(ctx)
-    .map((x) => ({ ...x.m, __task: x.task }))
-    .filter((m) => m.kind === 'compile')
+    .map(x => ({ ...x.m, __task: x.task }))
+    .filter(m => m.kind === 'compile')
 
   /** @type {Map<string, any>} */
-  const byIdAll = new Map(allEnabled.map((m) => [m.id, m]))
-  const runnableIds = new Set(runnableCompile.map((m) => m.id))
+  const byIdAll = new Map(allEnabled.map(m => [m.id, m]))
+  const runnableIds = new Set(runnableCompile.map(m => m.id))
 
-  // dependsOn sanity: do not silently ignore disabled deps
   for (const m of runnableCompile) {
     for (const dep of m.dependsOn || []) {
       if (!byIdAll.has(dep)) continue
@@ -229,7 +309,7 @@ export const getCompileLayers = (ctx) => {
   }
 
   /** @type {Map<string, any>} */
-  const byId = new Map(runnableCompile.map((m) => [m.id, m]))
+  const byId = new Map(runnableCompile.map(m => [m.id, m]))
 
   /** @type {Map<string, Set<string>>} */
   const deps = new Map()
@@ -237,7 +317,7 @@ export const getCompileLayers = (ctx) => {
   const indeg = new Map()
 
   for (const m of runnableCompile) {
-    const d = (m.dependsOn || []).filter((x) => byId.has(x))
+    const d = (m.dependsOn || []).filter(x => byId.has(x))
     deps.set(m.id, new Set(d))
     indeg.set(m.id, d.length)
   }
@@ -245,10 +325,10 @@ export const getCompileLayers = (ctx) => {
   /** @type {Array<Function[]>} */
   const layers = []
   /** @type {Set<string>} */
-  const remaining = new Set(runnableCompile.map((m) => m.id))
+  const remaining = new Set(runnableCompile.map(m => m.id))
 
   while (remaining.size) {
-    const layerIds = [...remaining].filter((id) => (indeg.get(id) || 0) === 0)
+    const layerIds = [...remaining].filter(id => (indeg.get(id) || 0) === 0)
 
     if (!layerIds.length) {
       const cycle = [...remaining].join(', ')
@@ -256,18 +336,17 @@ export const getCompileLayers = (ctx) => {
     }
 
     const layer = layerIds
-      .map((id) => byId.get(id))
+      .map(id => byId.get(id))
       .filter(Boolean)
       .sort(byOrder)
-      .map((m) => m.__task)
+      .map(m => m.__task)
       .filter(Boolean)
 
     layers.push(layer)
 
-    // Remove layer nodes
     for (const id of layerIds) {
       remaining.delete(id)
-      // Reduce indegree of dependents
+
       for (const otherId of remaining) {
         const otherDeps = deps.get(otherId)
         if (otherDeps && otherDeps.has(id)) {
@@ -288,4 +367,3 @@ export const getCompileLayers = (ctx) => {
  * - series: tasks executed sequentially
  * - parallel: tasks executed concurrently
  */
-

@@ -1,4 +1,3 @@
-// gulp/tasks/video.js
 import path from 'node:path'
 import fs from 'node:fs/promises'
 import fssync from 'node:fs'
@@ -25,7 +24,6 @@ import {
   ensureFileExists,
 } from '#gulp/utils/cache.js'
 
-// Loaded lazily only when the module is enabled and there is real work to do.
 let ffmpegPath = null
 
 async function ensureDir(dirAbs) {
@@ -50,12 +48,12 @@ function runFfmpeg(args) {
     const p = spawn(ffmpegPath, ['-y', ...args], { stdio: ['ignore', 'ignore', 'pipe'] })
     let stderr = ''
 
-    p.stderr.on('data', (d) => {
+    p.stderr.on('data', d => {
       stderr += String(d)
     })
 
     p.on('error', reject)
-    p.on('close', (code) => {
+    p.on('close', code => {
       if (code === 0) resolve()
       else reject(new Error(`videoTask: ffmpeg failed (code ${code}).\n${stderr}`))
     })
@@ -63,7 +61,6 @@ function runFfmpeg(args) {
 }
 
 function outBaseFor(inputAbs) {
-  // сохраняем структуру относительно src/assets/video
   const rel = toPosix(path.relative(paths.assets.videoBase, inputAbs))
   const relNoExt = rel.replace(path.extname(rel), '')
   const outDir = path.join(paths.out, cfg.outSubdir, path.dirname(relNoExt))
@@ -79,7 +76,6 @@ async function shouldBuild(inputAbs, outputAbs) {
   return inSt.mtimeMs > outSt.mtimeMs
 }
 
-
 async function copyTarget(inputAbs, outAbs) {
   if (!(await shouldBuild(inputAbs, outAbs))) return
   await ensureDir(path.dirname(outAbs))
@@ -91,61 +87,81 @@ async function buildTarget({ inputAbs, outAbs, args, force = false }) {
   await runFfmpeg(['-i', inputAbs, ...args, outAbs])
 }
 
-async function buildStill({ inputAbs, outAbs, atSeconds, width, formatArgs, vfExtra, force = false }) {
+async function buildStill({
+  inputAbs,
+  outAbs,
+  atSeconds,
+  width,
+  formatArgs,
+  vfExtra,
+  force = false,
+}) {
   if (!force && !(await shouldBuild(inputAbs, outAbs))) return
 
-  const vf = [
-    `scale=${width}:-2:flags=lanczos`, // ✅ более чёткий ресайз
-    vfExtra ?? null,
-  ]
-    .filter(Boolean)
-    .join(',')
+  const vf = [`scale=${width}:-2:flags=lanczos`, vfExtra ?? null].filter(Boolean).join(',')
 
-  // -ss перед -i быстрее для seek
   await runFfmpeg([
-    '-ss', String(atSeconds),
-    '-i', inputAbs,
-    '-frames:v', '1',
-    '-vf', vf,
+    '-ss',
+    String(atSeconds),
+    '-i',
+    inputAbs,
+    '-frames:v',
+    '1',
+    '-vf',
+    vf,
     ...formatArgs,
     outAbs,
   ])
 }
 
-// Очень грубая “переводилка” качества в диапазон q:v (2..31).
-// Используем только для JPEG poster, НЕ для WebP.
 function qvFromPercent(p) {
   const clamped = Math.max(1, Math.min(100, p))
   const q = Math.round((100 - clamped) / 3)
   return String(Math.max(2, Math.min(31, q)))
 }
 
-async function buildWebpThumb({ inputAbs, outAbs, atSeconds, width, quality, sharpen, force = false }) {
+async function buildWebpThumb({
+  inputAbs,
+  outAbs,
+  atSeconds,
+  width,
+  quality,
+  sharpen,
+  force = false,
+}) {
   if (!force && !(await shouldBuild(inputAbs, outAbs))) return
 
-  const vf = [
-    `scale=${width}:-2:flags=lanczos`,
-    sharpen ? `unsharp=5:5:${sharpen}:5:5:0` : null,
-  ]
+  const vf = [`scale=${width}:-2:flags=lanczos`, sharpen ? `unsharp=5:5:${sharpen}:5:5:0` : null]
     .filter(Boolean)
     .join(',')
 
   await runFfmpeg([
-    '-ss', String(atSeconds),
-    '-i', inputAbs,
-    '-frames:v', '1',
-    '-vf', vf,
-    '-c:v', 'libwebp',
-    '-quality', String(quality),
-    '-preset', 'picture',
-    '-lossless', '0',
+    '-ss',
+    String(atSeconds),
+    '-i',
+    inputAbs,
+    '-frames:v',
+    '1',
+    '-vf',
+    vf,
+    '-c:v',
+    'libwebp',
+    '-quality',
+    String(quality),
+    '-preset',
+    'picture',
+    '-lossless',
+    '0',
     outAbs,
   ])
 }
 
 export const videoTask = async () => {
   if (!features.media?.video?.enabled) {
-    await lazyDefault('ffmpeg-static', { enabled: false, skipLog: '[video] module disabled → ffmpeg not loaded' })
+    await lazyDefault('ffmpeg-static', {
+      enabled: false,
+      skipLog: '[video] module disabled → ffmpeg not loaded',
+    })
     return
   }
 
@@ -154,7 +170,6 @@ export const videoTask = async () => {
     : (features.media.video.buildMode ?? 'transcode')
 
   try {
-    // ✅ если папки нет — тихо выходим (не ломаем сборку)
     if (!fssync.existsSync(paths.assets.videoBase)) return
 
     const files = await globSafe(toPosix(paths.assets.video), {
@@ -165,36 +180,36 @@ export const videoTask = async () => {
     if (!files.length) return
 
     if (mode === 'copy') {
-      // devMode=copy: fast path (no transcode, just copy sources)
-      await lazyDefault('ffmpeg-static', { enabled: false, skipLog: '[video] devMode=copy → ffmpeg not loaded' })
+      await lazyDefault('ffmpeg-static', {
+        enabled: false,
+        skipLog: '[video] devMode=copy → ffmpeg not loaded',
+      })
 
       const limit = createLimit(cfg.concurrency ?? 1)
       await Promise.all(
-        files.map((inputAbs) =>
+        files.map(inputAbs =>
           limit(async () => {
             const rel = toPosix(path.relative(paths.assets.videoBase, inputAbs))
             const outAbs = path.join(paths.out, cfg.outSubdir, rel)
             await copyTarget(inputAbs, outAbs)
-          })
-        )
+          }),
+        ),
       )
 
       plugins.browserSync.stream()
       return
     }
 
-    // Load ffmpeg binary only if we actually have work to do.
     ffmpegPath = await lazyDefault('ffmpeg-static')
     if (!ffmpegPath) throw new Error('[video] Failed to load ffmpeg-static.')
 
     const limit = createLimit(cfg.concurrency ?? 1)
 
-    // Persistent cache: speed up repeated builds even though output dirs are cleaned.
     const paramsHash = stableHash({ cfg })
     const index = await readMediaIndex()
     index.video ??= {}
 
-    const requiredOutputs = (baseName) => {
+    const requiredOutputs = baseName => {
       const out = []
       if (cfg.webm?.enabled) out.push(`${baseName}${cfg.webm.ext ?? '.webm'}`)
       if (cfg.mp4?.enabled) out.push(`${baseName}${cfg.mp4.ext ?? '.mp4'}`)
@@ -204,7 +219,7 @@ export const videoTask = async () => {
     }
 
     await Promise.all(
-      files.map((inputAbs) =>
+      files.map(inputAbs =>
         limit(async () => {
           const rel = toPosix(path.relative(paths.assets.videoBase, inputAbs))
           const relNoExt = rel.replace(path.extname(rel), '')
@@ -236,7 +251,6 @@ export const videoTask = async () => {
           if (!hasAll) {
             await ensureDir(cacheDir)
 
-            // 1) WebM
             if (cfg.webm?.enabled) {
               await buildTarget({
                 inputAbs,
@@ -246,7 +260,6 @@ export const videoTask = async () => {
               })
             }
 
-            // 2) MP4 fallback
             if (cfg.mp4?.enabled) {
               await buildTarget({
                 inputAbs,
@@ -256,7 +269,6 @@ export const videoTask = async () => {
               })
             }
 
-            // 3) Poster (JPEG)
             if (cfg.posters?.enabled) {
               await buildStill({
                 inputAbs,
@@ -269,7 +281,6 @@ export const videoTask = async () => {
               })
             }
 
-            // 4) Thumbnail (WebP)
             if (cfg.thumbs?.enabled) {
               await buildWebpThumb({
                 inputAbs,
@@ -285,12 +296,11 @@ export const videoTask = async () => {
             index.video[relNoExt] = { sig, paramsHash }
           }
 
-          // Copy cached artifacts into the current output (dist/public)
           for (const fileName of req) {
             await fs.copyFile(path.join(cacheDir, fileName), path.join(outDir, fileName))
           }
-        })
-      )
+        }),
+      ),
     )
 
     await writeMediaIndex(index)

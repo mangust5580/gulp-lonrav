@@ -17,11 +17,9 @@ export const withPlumber = (taskName, { enabled = env.isDev } = {}) =>
         const message = err?.message || String(err)
         logger.error(taskName, message)
 
-        // Optional desktop notification (disabled by default)
         notifyError({ title: taskName, message })
 
-        // keep watch alive
         this.emit('end')
       },
-    })
+    }),
   )

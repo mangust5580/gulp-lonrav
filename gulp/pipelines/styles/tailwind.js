@@ -11,7 +11,6 @@ export const stylesTailwind = async () => {
   const postcssPlugins = await getPostcssPlugins('tailwind')
 
   return gulp
-    // fail-fast: no allowEmpty
     .src(paths.styles.entryTailwind)
     .pipe(withPlumber('styles:tailwind'))
     .pipe(plugins.gulpIf(styles.sourcemaps, plugins.sourcemaps.init()))

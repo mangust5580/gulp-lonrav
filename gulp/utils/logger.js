@@ -1,9 +1,3 @@
-// gulp/utils/logger.js
-// Minimal, consistent logger for gulp tasks.
-// - Cross-platform
-// - Dev-only messages
-// - "once" messages to avoid spam
-
 import { env } from '#gulp/utils/env.js'
 
 const onceKeys = new Set()
@@ -23,13 +17,11 @@ export const logger = {
     log(console.error, scope, msg)
   },
 
-  // Log only in dev
   dev(scope, msg) {
     if (!env.isDev) return
     log(console.log, scope, msg)
   },
 
-  // Log only once per key (typically in dev)
   once(key, scope, msg, { devOnly = true } = {}) {
     if (devOnly && !env.isDev) return
     if (onceKeys.has(key)) return

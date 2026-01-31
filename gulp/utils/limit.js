@@ -1,6 +1,3 @@
-// gulp/utils/limit.js
-// Minimal concurrency limiter (p-limit replacement) for Node >= 24.
-
 export function createLimit(concurrency = 1) {
   const c = Math.max(1, Number(concurrency) || 1)
 
@@ -16,12 +13,12 @@ export function createLimit(concurrency = 1) {
 
     Promise.resolve()
       .then(item.fn)
-      .then((v) => {
+      .then(v => {
         active--
         item.resolve(v)
         runNext()
       })
-      .catch((err) => {
+      .catch(err => {
         active--
         item.reject(err)
         runNext()

@@ -1,6 +1,3 @@
-// gulp/constants.js
-// Central place for shared constants used across the build system.
-
 export const STAGES = Object.freeze({
   DEV: 'dev',
   BUILD: 'build',

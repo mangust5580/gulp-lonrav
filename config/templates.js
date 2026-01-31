@@ -1,7 +1,6 @@
-// config/templates.js
-import { env } from '#gulp/utils/env.js'
-import { paths } from '#config/paths.js'
-import { engines } from '#config/engines.js'
+import {env} from '#gulp/utils/env.js'
+import {paths} from '#config/paths.js'
+import {engines} from '#config/engines.js'
 
 export const templates = {
   engine: engines.templates,
@@ -23,14 +22,9 @@ export const templates = {
 
     expressions: {
       enabled: true,
-
-      // если захотите — можно кастомизировать delimiters
-      // defaults: {{ }} в тексте и атрибутах
-      // delimiters: ['{{', '}}']
     },
 
     minify: env.isProd,
-
     minifier: {
       collapseWhitespace: true,
       conservativeCollapse: true,
@@ -39,8 +33,8 @@ export const templates = {
       removeScriptTypeAttributes: true,
       removeStyleLinkTypeAttributes: true,
       useShortDoctype: true,
-      minifyCSS: false, // CSS минифицируется вашим styles pipeline
-      minifyJS: false,  // JS минифицируется вашим scripts pipeline
+      minifyCSS: false,
+      minifyJS: false,
     },
   },
 

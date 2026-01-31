@@ -1,4 +1,3 @@
-// gulp/tasks/svg.js
 import path from 'node:path'
 import fs from 'node:fs/promises'
 
@@ -27,7 +26,7 @@ export const svgTask = async () => {
     const files = await globSafe(toPosix(paths.assets.svgs), {
       onlyFiles: true,
       absolute: true,
-      // на случай, если svgs-голоб станет шире в будущем
+
       ignore: [toPosix(paths.assets.icons)],
     })
 
@@ -37,7 +36,7 @@ export const svgTask = async () => {
     const svgoCfg = svg.optimize?.svgoConfig ?? { multipass: true, plugins: [] }
 
     await Promise.all(
-      files.map(async (abs) => {
+      files.map(async abs => {
         const rel = toPosix(path.relative(base, abs))
         const destAbs = path.join(outDir, rel)
 
@@ -51,12 +50,11 @@ export const svgTask = async () => {
         const raw = await fs.readFile(abs, 'utf8')
         const result = svgoOptimize(raw, svgoCfg)
         await fs.writeFile(destAbs, result.data, 'utf8')
-      })
+      }),
     )
 
     plugins.browserSync.stream()
   } catch (err) {
-    // Уведомляем об ошибке и логируем её
     await notifyError({ title: 'svg', message: err?.message || String(err) })
     logger.error('svg', err?.stack || err?.message || String(err))
     if (env.isProd) throw err

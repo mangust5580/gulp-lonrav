@@ -7,15 +7,14 @@ import { styles } from '#config/styles.js'
 
 const require = createRequire(import.meta.url)
 
-const unwrapDefault = (mod) => (mod && (mod.default ?? mod))
+const unwrapDefault = mod => mod && (mod.default ?? mod)
 
 function requireOptional(name, hint) {
   try {
     return unwrapDefault(require(name))
   } catch {
-    // Keep message actionable (works for pnpm/npm/yarn).
     throw new Error(
-      `[postcss] Missing dependency: "${name}" (required for ${hint}). Install: pnpm i -D ${name} (or npm i -D ${name}).`
+      `[postcss] Missing dependency: "${name}" (required for ${hint}). Install: pnpm i -D ${name} (or npm i -D ${name}).`,
     )
   }
 }
@@ -24,7 +23,7 @@ function requireOptional(name, hint) {
  * Returns PostCSS plugins for a given styles engine.
  * NOTE: Optional deps (tailwind/postcss-import) are loaded lazily and synchronously.
  */
-export const getPostcssPlugins = (engine) => {
+export const getPostcssPlugins = engine => {
   const plugins = []
 
   if (engine === 'css') {

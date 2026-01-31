@@ -11,7 +11,6 @@ export const stylesCss = async () => {
   const postcssPlugins = await getPostcssPlugins('css')
 
   return gulp
-    // fail-fast: no allowEmpty
     .src(paths.styles.entryCss)
     .pipe(withPlumber('styles:css'))
     .pipe(plugins.gulpIf(styles.sourcemaps, plugins.sourcemaps.init()))

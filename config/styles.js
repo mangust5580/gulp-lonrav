@@ -1,5 +1,5 @@
-import { env } from '#gulp/utils/env.js';
-import { loadUserConfig } from '#gulp/utils/load-user-config.js';
+import {env} from '#gulp/utils/env.js';
+import {loadUserConfig} from '#gulp/utils/load-user-config.js';
 
 const baseConfig = {
   engine: 'scss',

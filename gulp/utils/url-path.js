@@ -1,8 +1,7 @@
-// gulp/utils/url-path.js
-// Helpers for working with URL-like paths (POSIX '/'), NOT filesystem paths.
-
-export const normalizeBasePath = (basePath) => {
-  let bp = String(basePath || '').trim().replace(/\\/g, '/')
+export const normalizeBasePath = basePath => {
+  let bp = String(basePath || '')
+    .trim()
+    .replace(/\\/g, '/')
   if (bp === '/' || bp === '') return ''
   if (!bp.startsWith('/')) bp = `/${bp}`
   bp = bp.replace(/\/+$/g, '')
@@ -10,9 +9,10 @@ export const normalizeBasePath = (basePath) => {
   return bp === '/' ? '' : bp
 }
 
-// Normalize a URL *path* (not an absolute URL). Ensures leading slash.
-export const normalizeUrlPath = (p) => {
-  let s = String(p || '').trim().replace(/\\/g, '/')
+export const normalizeUrlPath = p => {
+  let s = String(p || '')
+    .trim()
+    .replace(/\\/g, '/')
   if (!s) return '/'
   if (s.startsWith('http://') || s.startsWith('https://') || s.startsWith('//')) return s
   if (!s.startsWith('/')) s = `/${s}`
@@ -22,14 +22,23 @@ export const normalizeUrlPath = (p) => {
 
 export const joinUrlPath = (...parts) => {
   const cleaned = parts
-    .map((p) => String(p || '').trim().replace(/\\/g, '/'))
+    .map(p =>
+      String(p || '')
+        .trim()
+        .replace(/\\/g, '/'),
+    )
     .filter(Boolean)
     .map((p, i) => (i === 0 ? p.replace(/\/+$/g, '') : p.replace(/^\/+|\/+$/g, '')))
 
   if (!cleaned.length) return '/'
   let out = cleaned.join('/')
   out = out.replace(/\/+/g, '/')
-  if (!out.startsWith('/') && !out.startsWith('http://') && !out.startsWith('https://') && !out.startsWith('//')) {
+  if (
+    !out.startsWith('/') &&
+    !out.startsWith('http://') &&
+    !out.startsWith('https://') &&
+    !out.startsWith('//')
+  ) {
     out = `/${out}`
   }
   return out
@@ -46,19 +55,17 @@ export const withBasePath = (urlPath, basePath) => {
   return (bp + p).replace(/\/+/g, '/')
 }
 
-// Strips basePath only for root-relative paths.
-// Leaves relative refs (e.g. "./img.png", "img.png") untouched.
 export const stripBasePath = (urlPath, basePath) => {
   const bp = normalizeBasePath(basePath)
-  let p = String(urlPath || '').trim().replace(/\\/g, '/')
+  let p = String(urlPath || '')
+    .trim()
+    .replace(/\\/g, '/')
 
   if (!bp) return p
   if (!p) return p
 
-  // keep absolute/protocol-relative URLs untouched
   if (p.startsWith('http://') || p.startsWith('https://') || p.startsWith('//')) return p
 
-  // Only root-relative paths can have a basePath prefix.
   if (!p.startsWith('/')) return p
 
   p = p.replace(/\/+/g, '/')

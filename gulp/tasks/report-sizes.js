@@ -1,6 +1,3 @@
-// gulp/tasks/report-sizes.js
-// Optional build-time size report for output bundle.
-
 import fs from 'node:fs'
 import path from 'node:path'
 import zlib from 'node:zlib'
@@ -11,7 +8,7 @@ import { paths } from '#config/paths.js'
 import { features } from '#config/features.js'
 import { env } from '#gulp/utils/env.js'
 
-const prettyBytes = (n) => {
+const prettyBytes = n => {
   if (!Number.isFinite(n)) return '0 B'
   const units = ['B', 'KB', 'MB', 'GB']
   let i = 0
@@ -23,17 +20,14 @@ const prettyBytes = (n) => {
   return `${v.toFixed(i ? 2 : 0)} ${units[i]}`
 }
 
-const gzipSize = (buf) => zlib.gzipSync(buf, { level: 9 }).byteLength
-const brotliSize = (buf) =>
+const gzipSize = buf => zlib.gzipSync(buf, { level: 9 }).byteLength
+const brotliSize = buf =>
   zlib.brotliCompressSync(buf, {
     params: {
       [zlib.constants.BROTLI_PARAM_QUALITY]: 11,
     },
   }).byteLength
 
-// Assets that are typically already compressed or not served with gzip/brotli in practice.
-// For these, reporting gzip/brotli sizes is misleading (can vary wildly and is not representative).
-// We treat them as "already compressed" and set gzip/brotli = raw.
 const PRECOMPRESSED_EXT = new Set([
   '.woff2',
   '.woff',
@@ -56,13 +50,13 @@ const PRECOMPRESSED_EXT = new Set([
   '.zip',
 ])
 
-const isPrecompressed = (filePath) => PRECOMPRESSED_EXT.has(path.extname(filePath).toLowerCase())
+const isPrecompressed = filePath => PRECOMPRESSED_EXT.has(path.extname(filePath).toLowerCase())
 
 export const createReportSizesTask = ({ stage }) => {
   const cfg = features.reports?.bundleSizes || {}
 
   const enabled = cfg.enabled !== false
-  if (!enabled) return (done) => done()
+  if (!enabled) return done => done()
 
   const enabledByStage =
     stage === 'build'
@@ -73,7 +67,7 @@ export const createReportSizesTask = ({ stage }) => {
           ? cfg.preview === true
           : false
 
-  if (!enabledByStage) return (done) => done()
+  if (!enabledByStage) return done => done()
 
   const include = cfg.include || ['**/*.*']
   const exclude = cfg.exclude || ['**/*.map']
@@ -82,7 +76,6 @@ export const createReportSizesTask = ({ stage }) => {
   const jsonFile = cfg.jsonFile || 'reports/bundle-sizes.json'
 
   return async () => {
-    // Safety: only meaningful for prod outputs.
     if (!env.isProd) return
 
     const outDir = paths.out
@@ -113,19 +106,28 @@ export const createReportSizesTask = ({ stage }) => {
       totalGzip += g
       totalBrotli += b
 
-      rows.push({ file: rel.replace(/\\/g, '/'), raw: r, gzip: g, brotli: b, precompressed: pre })
+      rows.push({
+        file: rel.replace(/\\/g, '/'),
+        raw: r,
+        gzip: g,
+        brotli: b,
+        precompressed: pre,
+      })
     }
 
     rows.sort((a, b) => b.raw - a.raw)
     const top = rows.slice(0, topN)
 
-    // Console output (build only) — keep it compact.
-    console.log(`\n[report] Bundle sizes (${rows.length} files)`) // eslint-disable-line no-console
-    console.log('[report] Note: binary/precompressed assets use gzip/br = raw for readability.') // eslint-disable-line no-console
-    console.log(`Raw: ${prettyBytes(totalRaw)} | Gzip: ${prettyBytes(totalGzip)} | Brotli: ${prettyBytes(totalBrotli)}`) // eslint-disable-line no-console
-    console.log('[report] Top files by raw size:') // eslint-disable-line no-console
+    console.log(`\n[report] Bundle sizes (${rows.length} files)`)
+    console.log('[report] Note: binary/precompressed assets use gzip/br = raw for readability.')
+    console.log(
+      `Raw: ${prettyBytes(totalRaw)} | Gzip: ${prettyBytes(totalGzip)} | Brotli: ${prettyBytes(totalBrotli)}`,
+    )
+    console.log('[report] Top files by raw size:')
     for (const r of top) {
-      console.log(`- ${r.file}  raw ${prettyBytes(r.raw)}  gzip ${prettyBytes(r.gzip)}  br ${prettyBytes(r.brotli)}`) // eslint-disable-line no-console
+      console.log(
+        `- ${r.file}  raw ${prettyBytes(r.raw)}  gzip ${prettyBytes(r.gzip)}  br ${prettyBytes(r.brotli)}`,
+      )
     }
 
     if (writeJson) {
@@ -137,7 +139,7 @@ export const createReportSizesTask = ({ stage }) => {
       const outPath = path.join(outDir, jsonFile)
       fs.mkdirSync(path.dirname(outPath), { recursive: true })
       fs.writeFileSync(outPath, JSON.stringify(report, null, 2))
-      console.log(`[report] Saved: ${jsonFile}`) // eslint-disable-line no-console
+      console.log(`[report] Saved: ${jsonFile}`)
     }
   }
 }

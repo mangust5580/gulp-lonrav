@@ -1,17 +1,10 @@
-// gulp/utils/scheduler.js
-// Debounce + single-flight runner for watch events.
-// Goal: one rebuild per burst; if changes happen during an active run,
-// do exactly one additional run afterwards.
-
 import { logger } from '#gulp/utils/logger.js'
 
 function toPromise(ret) {
   if (!ret) return Promise.resolve()
 
-  // Promise
   if (typeof ret?.then === 'function') return ret
 
-  // Stream (gulp streams)
   if (typeof ret?.on === 'function') {
     return new Promise((resolve, reject) => {
       let done = false
@@ -65,8 +58,7 @@ export function createScheduler({ debounceMs = 150 } = {}) {
     s.running = true
 
     toPromise(s.lastFn())
-      .catch((err) => {
-        // Ошибка должна быть видимой, но watcher не должен умирать в dev
+      .catch(err => {
         logger.error(`watch:${key}`, err?.stack || err?.message || String(err))
       })
       .finally(() => {

@@ -8,7 +8,7 @@ function logOnce(message) {
   if (!env.isDev) return
   if (onceLog.has(message)) return
   onceLog.add(message)
-  // Intentionally minimal: one line, no spam
+
   logger.dev('lazy', message)
 }
 

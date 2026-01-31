@@ -10,7 +10,7 @@ export const templatesNunjucks = async (options = {}) => {
   const nunjucksRender = await lazyDefault('gulp-nunjucks-render')
   if (!nunjucksRender) {
     throw new Error(
-      '[templates:nunjucks] Missing dependency: "gulp-nunjucks-render". Install: pnpm i -D gulp-nunjucks-render nunjucks (or npm i -D gulp-nunjucks-render nunjucks).'
+      '[templates:nunjucks] Missing dependency: "gulp-nunjucks-render". Install: pnpm i -D gulp-nunjucks-render nunjucks (or npm i -D gulp-nunjucks-render nunjucks).',
     )
   }
   const stream = templatesSrc(paths.pages.nunjucks, 'templates:nunjucks').pipe(
@@ -18,7 +18,7 @@ export const templatesNunjucks = async (options = {}) => {
       path: templates.nunjucks.paths,
       envOptions: templates.nunjucks.envOptions,
       data,
-    })
+    }),
   )
 
   return templatesDest(stream, options)

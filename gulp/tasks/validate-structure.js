@@ -1,10 +1,3 @@
-// gulp/tasks/validate-structure.js
-//
-// Goal: predictable, minimalistic static-site structure with stage-aware strictness.
-// - dev: warn by default for missing entry files (can be changed via config)
-// - build/preview: fail by default
-// - i18n: always strict when enabled (fail in dev/build/preview)
-
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -32,12 +25,13 @@ const hasFiles = async (baseDir, pattern) => {
 const detectStageFromArgv = () => {
   const args = new Set(process.argv.slice(2))
   if ([...args].some(a => a === 'preview')) return STAGES.PREVIEW
-  if ([...args].some(a => a === 'build:fast' || a.startsWith('build:fast'))) return STAGES.BUILD_FAST
+  if ([...args].some(a => a === 'build:fast' || a.startsWith('build:fast')))
+    return STAGES.BUILD_FAST
   if ([...args].some(a => a === 'build' || a.startsWith('build:'))) return STAGES.BUILD
   return STAGES.DEV
 }
 
-const getStructurePolicy = (stage) => {
+const getStructurePolicy = stage => {
   const q = features.quality || {}
   const cfg = q.validateStructure
   if (cfg && typeof cfg === 'object') {
@@ -48,11 +42,10 @@ const getStructurePolicy = (stage) => {
     return cfg.dev || 'warn'
   }
 
-  // Fallback: dev warns, prod fails
   return env.isProd ? 'fail' : 'warn'
 }
 
-const shouldRunRule = (ruleKey) => {
+const shouldRunRule = ruleKey => {
   const q = features.quality || {}
   const cfg = q.validateStructure
   if (!cfg || typeof cfg !== 'object') return true
@@ -98,12 +91,12 @@ const handleDisabledSvgSpriteFilesViolation = (stage, msg) => {
   })
 }
 
-const hasAny = async (pattern) => {
+const hasAny = async pattern => {
   const files = await globSafe(pattern, { onlyFiles: true, absolute: true })
   return files.length > 0
 }
 
-const existsFile = (p) => {
+const existsFile = p => {
   try {
     return fs.statSync(p).isFile()
   } catch {
@@ -111,7 +104,7 @@ const existsFile = (p) => {
   }
 }
 
-const ensurePagesExist = async (stage) => {
+const ensurePagesExist = async stage => {
   if (!shouldRunRule('requirePages')) return
 
   const engine = engines.templates
@@ -124,7 +117,7 @@ const ensurePagesExist = async (stage) => {
   }
 }
 
-const ensureEntriesExist = (stage) => {
+const ensureEntriesExist = stage => {
   if (shouldRunRule('requireScriptsEntry')) {
     if (!existsFile(paths.scripts.entry)) {
       handleViolation({
@@ -151,13 +144,12 @@ const ensureEntriesExist = (stage) => {
   }
 }
 
-const ensureFaviconsSource = (stage) => {
+const ensureFaviconsSource = stage => {
   if (!features.favicons?.enabled) return
   if (!shouldRunRule('requireFaviconsSource')) return
 
   const exists = existsFile(paths.assets.faviconSvg)
 
-  // Always generate favicons in build/preview. In dev we can warn.
   if (!exists) {
     const isStrict = env.isProd ? !!features.favicons?.requireSourceInBuild : false
     handleViolation({
@@ -168,10 +160,9 @@ const ensureFaviconsSource = (stage) => {
   }
 }
 
-const ensureI18nStructure = (stage) => {
+const ensureI18nStructure = stage => {
   if (!features.i18n?.enabled) return
 
-  // Per requirement: i18n issues must fail in dev/build/preview.
   const strictPolicy = 'fail'
 
   const locales = (i18nCfg.locales || []).map(l => String(l).trim().toLowerCase()).filter(Boolean)
@@ -199,9 +190,7 @@ const ensureI18nStructure = (stage) => {
   }
 }
 
-const ensureNoDisabledMediaFiles = async (stage) => {
-  // Defensive scan: if module is disabled, corresponding files should not exist anywhere in src/assets.
-  // (Projects typically won't contain them, but this prevents silent pipeline mismatches.)
+const ensureNoDisabledMediaFiles = async stage => {
   const base = path.join(paths.src, 'assets')
   const audioGlob = toPosix(path.join(base, '**/*.{wav,mp3,ogg,opus,m4a,aac,flac}'))
   const videoGlob = toPosix(path.join(base, '**/*.{mp4,mov,m4v,webm}'))
@@ -211,7 +200,7 @@ const ensureNoDisabledMediaFiles = async (stage) => {
     if (found) {
       handleDisabledFilesViolation(
         stage,
-        `Found audio files under "src/assets" while media.audio is disabled. Enable the module in config/features.js or remove the files.`
+        `Found audio files under "src/assets" while media.audio is disabled. Enable the module in config/features.js or remove the files.`,
       )
     }
   }
@@ -221,18 +210,17 @@ const ensureNoDisabledMediaFiles = async (stage) => {
     if (found) {
       handleDisabledFilesViolation(
         stage,
-        `Found video files under "src/assets" while media.video is disabled. Enable the module in config/features.js or remove the files.`
+        `Found video files under "src/assets" while media.video is disabled. Enable the module in config/features.js or remove the files.`,
       )
     }
   }
 
-  // Keep legacy folder-specific checks (more readable messages).
   if (!features.media?.audio?.enabled) {
     const found = await hasFiles(paths.assets.audioBase, toPosix(paths.assets.audio))
     if (found) {
       handleDisabledFilesViolation(
         stage,
-        `Found audio files in "src/assets/audio" while media.audio is disabled. Enable the module in config/features.js or remove the files.`
+        `Found audio files in "src/assets/audio" while media.audio is disabled. Enable the module in config/features.js or remove the files.`,
       )
     }
   }
@@ -242,13 +230,13 @@ const ensureNoDisabledMediaFiles = async (stage) => {
     if (found) {
       handleDisabledFilesViolation(
         stage,
-        `Found video files in "src/assets/video" while media.video is disabled. Enable the module in config/features.js or remove the files.`
+        `Found video files in "src/assets/video" while media.video is disabled. Enable the module in config/features.js or remove the files.`,
       )
     }
   }
 }
 
-const ensureNoDisabledStaticFiles = async (stage) => {
+const ensureNoDisabledStaticFiles = async stage => {
   await ensureNoDisabledFiles({
     stage,
     enabled: features.static?.enabled !== false,
@@ -256,11 +244,15 @@ const ensureNoDisabledStaticFiles = async (stage) => {
     glob: toPosix(path.join(paths.assets.staticBase, '**/*')),
     msg: `Found files in "src/static" while static module is disabled. Enable the module in config/features.js (features.static.enabled=true) or remove the files.`,
     policy: features.static?.policy,
-    fallback: () => handleViolation({ stage, msg: `Found files in "src/static" while static module is disabled. Enable the module in config/features.js (features.static.enabled=true) or remove the files.` }),
+    fallback: () =>
+      handleViolation({
+        stage,
+        msg: `Found files in "src/static" while static module is disabled. Enable the module in config/features.js (features.static.enabled=true) or remove the files.`,
+      }),
   })
 }
 
-const ensureNoDisabledSvgSpriteFiles = async (stage) => {
+const ensureNoDisabledSvgSpriteFiles = async stage => {
   await ensureNoDisabledFiles({
     stage,
     enabled: features.svgSprite?.enabled !== false,
@@ -268,41 +260,37 @@ const ensureNoDisabledSvgSpriteFiles = async (stage) => {
     glob: toPosix(paths.assets.icons),
     msg: `Found SVG icons in "src/assets/icons" while svgSprite module is disabled. Enable the module in config/features.js (features.svgSprite.enabled=true) or remove the files.`,
     policy: features.svgSprite?.policy,
-    fallback: () => handleViolation({ stage, msg: `Found SVG icons in "src/assets/icons" while svgSprite module is disabled. Enable the module in config/features.js (features.svgSprite.enabled=true) or remove the files.` }),
+    fallback: () =>
+      handleViolation({
+        stage,
+        msg: `Found SVG icons in "src/assets/icons" while svgSprite module is disabled. Enable the module in config/features.js (features.svgSprite.enabled=true) or remove the files.`,
+      }),
   })
 }
 
-export const createValidateStructureTask = ({ stage }) => async () => {
-  const s = stage || detectStageFromArgv()
+export const createValidateStructureTask =
+  ({ stage }) =>
+  async () => {
+    const s = stage || detectStageFromArgv()
 
-  // Scaffold is an optional dev helper.
-  // In strict mode we must not fail early here, because stage-aware validation
-  // (warn/fail) is handled by the rules below.
-  if (scaffold?.mode === 'auto') {
-    await scaffoldTask()
+    if (scaffold?.mode === 'auto') {
+      await scaffoldTask()
+    }
+
+    await ensureI18nStructure(s)
+
+    await ensurePagesExist(s)
+    ensureEntriesExist(s)
+
+    ensureFaviconsSource(s)
+
+    await ensureNoDisabledStaticFiles(s)
+
+    await ensureNoDisabledSvgSpriteFiles(s)
+
+    await ensureNoDisabledMediaFiles(s)
   }
 
-  // i18n is strict by requirement
-  await ensureI18nStructure(s)
-
-  // Core entry points and pages
-  await ensurePagesExist(s)
-  ensureEntriesExist(s)
-
-  // Favicons are always generated
-  ensureFaviconsSource(s)
-
-  // Optional static module
-  await ensureNoDisabledStaticFiles(s)
-
-  // Optional svgSprite module
-  await ensureNoDisabledSvgSpriteFiles(s)
-
-  // Optional media modules
-  await ensureNoDisabledMediaFiles(s)
-}
-
-// Backward compatible default export (used by older code paths)
 export const validateStructureTask = async () => {
   const task = createValidateStructureTask({ stage: detectStageFromArgv() })
   await task()

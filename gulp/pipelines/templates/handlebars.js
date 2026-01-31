@@ -11,14 +11,14 @@ export const templatesHandlebars = async (options = {}) => {
   const hb = await lazyDefault('gulp-hb')
   if (!hb) {
     throw new Error(
-      '[templates:handlebars] Missing dependency: "gulp-hb". Install: pnpm i -D gulp-hb handlebars (or npm i -D gulp-hb handlebars).'
+      '[templates:handlebars] Missing dependency: "gulp-hb". Install: pnpm i -D gulp-hb handlebars (or npm i -D gulp-hb handlebars).',
     )
   }
 
   const rename = await lazyDefault('gulp-rename')
   if (!rename) {
     throw new Error(
-      '[templates:handlebars] Missing dependency: "gulp-rename". Install: pnpm i -D gulp-rename (or npm i -D gulp-rename).'
+      '[templates:handlebars] Missing dependency: "gulp-rename". Install: pnpm i -D gulp-rename (or npm i -D gulp-rename).',
     )
   }
 
@@ -27,7 +27,7 @@ export const templatesHandlebars = async (options = {}) => {
       hb(templates.handlebars.options)
         .partials(templates.handlebars.partials)
         .data(data)
-        .helpers(templates.handlebars.helpers || {})
+        .helpers(templates.handlebars.helpers || {}),
     )
     .pipe(rename({ extname: '.html' }))
 

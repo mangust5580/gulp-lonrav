@@ -1,5 +1,5 @@
-// src/scripts/main.js
-// Starter script for gulp-lonrav (RU/EN switch, default: RU).
+
+
 
 const STORAGE_KEY = 'gulp-lonrav.lang';
 
@@ -147,7 +147,7 @@ function setActiveButtons(lang) {
 function applyTranslations(lang) {
   const t = dict[lang] || dict.ru;
 
-  // textContent-only
+  
   document.querySelectorAll('[data-i18n]').forEach((el) => {
     const key = el.getAttribute('data-i18n');
     if (!key) return;
@@ -155,7 +155,7 @@ function applyTranslations(lang) {
     if (typeof val === 'string') el.textContent = val;
   });
 
-  // innerHTML (controlled strings)
+  
   document.querySelectorAll('[data-i18n-html]').forEach((el) => {
     const key = el.getAttribute('data-i18n-html');
     if (!key) return;
@@ -184,7 +184,7 @@ document.addEventListener('click', (e) => {
   const lang = getInitialLang();
   applyTranslations(lang);
 
-  // Tooltip on badge
+  
   const badge = document.querySelector('.hero__badge');
   if (badge) {
     const now = new Date();

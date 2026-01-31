@@ -1,16 +1,12 @@
-// gulp/core/watch.js
-// Centralized watch builder that consumes declarative watch rules.
-
 import gulp from 'gulp'
 
 import { createScheduler } from '#gulp/utils/scheduler.js'
 import { getWatchRules } from '#gulp/core/modules.js'
 
-const toPromise = (ret) => {
+const toPromise = ret => {
   if (!ret) return Promise.resolve()
   if (typeof ret?.then === 'function') return ret
 
-  // stream
   if (typeof ret?.on === 'function') {
     return new Promise((resolve, reject) => {
       let done = false
@@ -36,13 +32,15 @@ const withReload = (reload, fn) => () =>
     } catch {}
   })
 
-export const createWatchTask = (ctx) => {
+export const createWatchTask = ctx => {
   const scheduler = createScheduler({ debounceMs: ctx?.project?.watch?.debounceMs ?? 150 })
 
   const watchOptions = {
     ignoreInitial: true,
-    awaitWriteFinish:
-      ctx?.project?.watch?.awaitWriteFinish ?? { stabilityThreshold: 200, pollInterval: 100 },
+    awaitWriteFinish: ctx?.project?.watch?.awaitWriteFinish ?? {
+      stabilityThreshold: 200,
+      pollInterval: 100,
+    },
   }
 
   const rules = getWatchRules(ctx)

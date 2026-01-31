@@ -11,21 +11,14 @@ export const scriptsEsbuild = async () => {
   await esbuild({
     entryPoints: [paths.scripts.entry],
     bundle: true,
-
-    // ESM: лучше outdir + entryNames
     outdir,
     entryNames: path.parse(scripts.outfile).name,
-
     sourcemap: scripts.sourcemaps,
     minify: scripts.minify,
-
     target: scripts.target,
     format: scripts.format,
     platform: 'browser',
-
-    // ESM-friendly (можно оставить даже без splitting — но так лучше на будущее)
     splitting: true,
-
     logLevel: 'info',
   })
 

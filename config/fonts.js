@@ -1,4 +1,4 @@
-import { env } from '#gulp/utils/env.js'
+import {env} from '#gulp/utils/env.js'
 
 /**
  * Настройки шрифтов.
@@ -17,14 +17,9 @@ export const fonts = {
   },
 
   warnings: {
-    // Подавлять известный шум в dev
     suppressInDev: true,
-    // В prod по умолчанию тоже подавляем известный шум, чтобы логи были чистыми
     suppressInProd: true,
-
-    // Какие строки в stderr считать «шумом»
     patterns: [
-      // ttf2woff2 / woff2 часто печатает это на Windows
       /Parsing of the input font failed\.?/i,
     ],
 

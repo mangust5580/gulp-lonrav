@@ -10,33 +10,32 @@ import { createContext } from '#gulp/core/context.js'
 import { getCompileLayers, getEnabledCompileIds } from '#gulp/core/registry.js'
 import { profileTask } from '#gulp/core/profiler.js'
 
-// Ensures dev/prod behavior for downstream tooling (e.g., cssnano)
 process.env.NODE_ENV = env.isProd ? 'production' : 'development'
 
-const noop = (done) => done()
+const noop = done => done()
 
-const toSeries = (tasks) => (tasks.length ? gulp.series(...tasks) : noop)
-const toParallelOrSeries = (tasks) => (tasks.length > 1 ? gulp.parallel(...tasks) : tasks[0] || noop)
+const toSeries = tasks => (tasks.length ? gulp.series(...tasks) : noop)
+const toParallelOrSeries = tasks => (tasks.length > 1 ? gulp.parallel(...tasks) : tasks[0] || noop)
 
 /**
  * Topologically sorts a small dependency graph for predictable post steps.
  */
-const topoSort = (nodes) => {
-  const byId = new Map(nodes.map((n) => [n.id, n]))
+const topoSort = nodes => {
+  const byId = new Map(nodes.map(n => [n.id, n]))
   const indeg = new Map()
   const deps = new Map()
 
   for (const n of nodes) {
-    const d = (n.dependsOn || []).filter((x) => byId.has(x))
+    const d = (n.dependsOn || []).filter(x => byId.has(x))
     deps.set(n.id, new Set(d))
     indeg.set(n.id, d.length)
   }
 
-  const remaining = new Set(nodes.map((n) => n.id))
+  const remaining = new Set(nodes.map(n => n.id))
   const ordered = []
 
   while (remaining.size) {
-    const ready = [...remaining].filter((id) => (indeg.get(id) || 0) === 0)
+    const ready = [...remaining].filter(id => (indeg.get(id) || 0) === 0)
     if (!ready.length) {
       const cycle = [...remaining].join(', ')
       throw new Error(`[pipeline] Cyclic dependsOn detected among post tasks: ${cycle}`)
@@ -73,25 +72,25 @@ const buildPipeline = ({ ctx, tasks }) => {
   const compileLayers = getCompileLayers(ctx)
   const steps = []
 
-  // Pre (minimal)
   steps.push(toSeries([tasks.clean].filter(Boolean)))
 
-  // Compile (each layer: parallel; layers: series)
   for (const layer of compileLayers) {
     steps.push(toParallelOrSeries(layer.filter(Boolean)))
   }
 
-  // Post / Serve
   if (ctx.stage === STAGES.DEV) {
     steps.push(toSeries([tasks.server, tasks.watch].filter(Boolean)))
   } else {
     const compileIds = getEnabledCompileIds(ctx)
 
-    // Post steps are optional. We keep a strict order via small dependsOn graph.
     const postNodes = [
       { id: 'versioning', task: tasks.versioning, dependsOn: compileIds },
-      { id: 'seo', task: tasks.seo, dependsOn: [tasks.versioning ? 'versioning' : null].filter(Boolean) },
-    ].filter((n) => Boolean(n.task))
+      {
+        id: 'seo',
+        task: tasks.seo,
+        dependsOn: [tasks.versioning ? 'versioning' : null].filter(Boolean),
+      },
+    ].filter(n => Boolean(n.task))
 
     if (postNodes.length) steps.push(toSeries(topoSort(postNodes)))
   }

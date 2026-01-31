@@ -4,18 +4,14 @@ import path from 'node:path'
 import { templates } from '#config/templates.js'
 import { lazyNamed } from '#gulp/utils/lazy.js'
 
-// Tiny memoization to avoid re-parsing the same globals file multiple times per run.
-// Key: absolute path. Value: { mtimeMs, data }
 const cache = new Map()
 
-const toAbs = (filepath) => {
+const toAbs = filepath => {
   if (!filepath) return null
-  return path.isAbsolute(filepath)
-    ? filepath
-    : path.join(process.cwd(), filepath)
+  return path.isAbsolute(filepath) ? filepath : path.join(process.cwd(), filepath)
 }
 
-const readFileSafe = (abs) => {
+const readFileSafe = abs => {
   if (!abs) return null
   if (!fs.existsSync(abs)) return null
   const raw = fs.readFileSync(abs, 'utf8')
@@ -35,7 +31,6 @@ const parseYaml = async (raw, abs) => {
   if (!raw || !raw.trim()) return {}
   const load = await lazyNamed('js-yaml', 'load')
   if (!load) {
-    // Should not happen when dependency is installed, but keep message explicit.
     throw new Error('[data] YAML support requires "js-yaml" dependency.')
   }
   try {
@@ -46,7 +41,7 @@ const parseYaml = async (raw, abs) => {
   }
 }
 
-const readDataFile = async (filepath) => {
+const readDataFile = async filepath => {
   const abs = toAbs(filepath)
   if (!abs) return {}
 
@@ -65,7 +60,9 @@ const readDataFile = async (filepath) => {
   if (ext === '.json') data = parseJson(raw, abs)
   else if (ext === '.yml' || ext === '.yaml') data = await parseYaml(raw, abs)
   else {
-    throw new Error(`[data] Unsupported data file extension: ${ext} (${abs}). Use .json / .yml / .yaml.`)
+    throw new Error(
+      `[data] Unsupported data file extension: ${ext} (${abs}). Use .json / .yml / .yaml.`,
+    )
   }
 
   cache.set(abs, { mtimeMs: stat.mtimeMs, data })

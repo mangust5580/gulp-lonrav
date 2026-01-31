@@ -1,6 +1,3 @@
-// gulp/core/feature-guard.js
-// Small helpers to keep "feature disabled but files exist" behavior consistent.
-
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -8,7 +5,7 @@ import { STAGES } from '#gulp/constants.js'
 import { globSafe, toPosix } from '#gulp/utils/glob.js'
 import { logger } from '#gulp/utils/logger.js'
 
-const hasAny = async (pattern) => {
+const hasAny = async pattern => {
   const files = await globSafe(pattern, { onlyFiles: true, absolute: true })
   return files.length > 0
 }
@@ -35,13 +32,21 @@ export const applyDisabledFilesPolicy = ({ stage, msg, policy, fallback }) => {
  * Ensures that when a feature/module is disabled, matching files do not exist.
  * If they exist, applies the provided policy.
  */
-export const ensureNoDisabledFiles = async ({ stage, enabled, baseDir, glob, msg, policy, fallback }) => {
+export const ensureNoDisabledFiles = async ({
+  stage,
+  enabled,
+  baseDir,
+  glob,
+  msg,
+  policy,
+  fallback,
+}) => {
   if (enabled) return
 
   const base = baseDir ? String(baseDir) : null
   if (base && !fs.existsSync(base)) return
 
-  const pattern = glob ? String(glob) : (base ? toPosix(path.join(base, '**/*')) : null)
+  const pattern = glob ? String(glob) : base ? toPosix(path.join(base, '**/*')) : null
   if (!pattern) return
 
   const found = await hasAny(pattern)

@@ -1,1 +1,1 @@
-export const getReportSizesTask = () => null;
+export const getReportSizesTask = () => null

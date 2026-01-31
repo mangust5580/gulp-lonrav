@@ -11,14 +11,14 @@ export const templatesEjs = async (options = {}) => {
   const ejs = await lazyDefault('gulp-ejs')
   if (!ejs) {
     throw new Error(
-      '[templates:ejs] Missing dependency: "gulp-ejs". Install: pnpm i -D gulp-ejs ejs (or npm i -D gulp-ejs ejs).'
+      '[templates:ejs] Missing dependency: "gulp-ejs". Install: pnpm i -D gulp-ejs ejs (or npm i -D gulp-ejs ejs).',
     )
   }
 
   const rename = await lazyDefault('gulp-rename')
   if (!rename) {
     throw new Error(
-      '[templates:ejs] Missing dependency: "gulp-rename". Install: pnpm i -D gulp-rename (or npm i -D gulp-rename).'
+      '[templates:ejs] Missing dependency: "gulp-rename". Install: pnpm i -D gulp-rename (or npm i -D gulp-rename).',
     )
   }
 

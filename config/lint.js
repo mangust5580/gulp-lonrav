@@ -1,13 +1,10 @@
-// config/lint.js
-// Только данные. Управление линтерами — отсюда.
-
 export const lint = {
   /**
    * Включение/выключение линтинга
    * Если styles=false — lintStylesTask просто делает cb() и сборка идёт дальше.
    */
   enabled: {
-    styles: false, // <-- поставь true/false как тебе нужно
+    styles: false,
     scripts: true,
   },
 

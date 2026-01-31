@@ -1,4 +1,3 @@
-// gulp/tasks/versioning.js
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
@@ -20,10 +19,10 @@ const getAssetsGlobs = () => {
     .flatMap(([, v]) => (Array.isArray(v) ? v : []))
     .filter(Boolean)
 
-  return selected.length ? selected : (versioning.assetsGlobs || [])
+  return selected.length ? selected : versioning.assetsGlobs || []
 }
 
-const runStream = (stream) =>
+const runStream = stream =>
   new Promise((resolve, reject) => {
     stream.on('end', resolve)
     stream.on('finish', resolve)
@@ -31,12 +30,10 @@ const runStream = (stream) =>
   })
 
 export const versioningTask = async () => {
-  // Только prod + включено в конфиге
   if (!env.isProd) return
   if (!features.versioning?.enabled) return
 
-  // 1) rev assets
-  const assetsGlobAbs = getAssetsGlobs().map((g) => path.join(paths.out, g))
+  const assetsGlobAbs = getAssetsGlobs().map(g => path.join(paths.out, g))
   const manifestPath = path.join(paths.out, versioning.manifestName)
 
   await runStream(
@@ -45,15 +42,14 @@ export const versioningTask = async () => {
       .pipe(rev())
       .pipe(gulp.dest(paths.out))
       .pipe(rev.manifest(versioning.manifestName))
-      .pipe(gulp.dest(paths.out))
+      .pipe(gulp.dest(paths.out)),
   )
 
-  // 2) rewrite html
   const manifest = await fs.readFile(manifestPath)
   await runStream(
     gulp
       .src(path.join(paths.out, ...versioning.rewriteGlobs), { allowEmpty: true })
       .pipe(revRewrite({ manifest }))
-      .pipe(gulp.dest(paths.out))
+      .pipe(gulp.dest(paths.out)),
   )
 }

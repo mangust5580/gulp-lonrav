@@ -1,11 +1,3 @@
-// gulp/core/config.js
-// Centralized config normalization + validation.
-//
-// Goals:
-// - Validate config contracts early (dev/build/preview)
-// - Provide minimal safe defaults for optional blocks
-// - Warn/error on unknown keys (stage-aware)
-
 import { STAGES } from '#gulp/constants.js'
 import { logger } from '#gulp/utils/logger.js'
 
@@ -16,11 +8,9 @@ import { project as rawProject } from '#config/project.js'
 import { plugins as rawPlugins } from '#config/plugins.js'
 import { site as rawSite } from '#config/site.js'
 
-// --- small utilities --------------------------------------------------------
+const isPlainObject = v => Boolean(v) && typeof v === 'object' && !Array.isArray(v)
 
-const isPlainObject = (v) => Boolean(v) && typeof v === 'object' && !Array.isArray(v)
-
-const clone = (v) => {
+const clone = v => {
   if (Array.isArray(v)) return v.map(clone)
   if (isPlainObject(v)) {
     const out = {}
@@ -42,17 +32,17 @@ const deepMerge = (base, extra) => {
   return out
 }
 
-const stagePolicy = (stage) => {
+const stagePolicy = stage => {
   const s = stage || STAGES.DEV
   if (s === STAGES.DEV) return 'warn'
-  // build, build:fast, preview
+
   return 'fail'
 }
 
 const reportUnknownKeys = ({ scope, obj, allowed, stage }) => {
   if (!isPlainObject(obj)) return
 
-  const unknown = Object.keys(obj).filter((k) => !allowed.includes(k))
+  const unknown = Object.keys(obj).filter(k => !allowed.includes(k))
   if (!unknown.length) return
 
   const msg = `Unknown keys in ${scope}: ${unknown.join(', ')}`
@@ -64,11 +54,11 @@ const req = (cond, message) => {
   if (!cond) throw new Error(message)
 }
 
-const reqString = (v, name) => req(typeof v === 'string' && v.trim() !== '', `${name} must be a non-empty string`)
+const reqString = (v, name) =>
+  req(typeof v === 'string' && v.trim() !== '', `${name} must be a non-empty string`)
 const reqBool = (v, name) => req(typeof v === 'boolean', `${name} must be a boolean`)
-const reqNum = (v, name) => req(typeof v === 'number' && Number.isFinite(v), `${name} must be a finite number`)
-
-// --- defaults (minimal & safe) ---------------------------------------------
+const reqNum = (v, name) =>
+  req(typeof v === 'number' && Number.isFinite(v), `${name} must be a finite number`)
 
 const DEFAULTS = Object.freeze({
   engines: {
@@ -80,7 +70,12 @@ const DEFAULTS = Object.freeze({
   features: {
     notifications: { enabled: false },
     i18n: { enabled: false },
-    seo: { enabled: true, sitemap: true, robots: true, requireSiteUrl: { local: false, ci: true } },
+    seo: {
+      enabled: true,
+      sitemap: true,
+      robots: true,
+      requireSiteUrl: { local: false, ci: true },
+    },
     versioning: { enabled: true, strategy: 'hash', manifest: true },
     favicons: { enabled: false, requireSourceInBuild: true },
     svgSprite: {
@@ -160,8 +155,6 @@ const DEFAULTS = Object.freeze({
   },
 })
 
-// --- validators -------------------------------------------------------------
-
 const validateEngines = ({ stage, engines }) => {
   req(isPlainObject(engines), 'config/engines must export an object')
 
@@ -180,24 +173,24 @@ const validateEngines = ({ stage, engines }) => {
   reqString(css, 'engines.styles')
   reqString(js, 'engines.scripts')
 
-  req(['html', 'pug', 'nunjucks', 'ejs', 'handlebars', 'hbs'].includes(tpl),
-    `engines.templates must be one of: html, pug, nunjucks, ejs, handlebars (got: ${tpl})`
+  req(
+    ['html', 'pug', 'nunjucks', 'ejs', 'handlebars', 'hbs'].includes(tpl),
+    `engines.templates must be one of: html, pug, nunjucks, ejs, handlebars (got: ${tpl})`,
   )
-  req(['scss', 'css', 'tailwind'].includes(css),
-    `engines.styles must be one of: scss, css, tailwind (got: ${css})`
+  req(
+    ['scss', 'css', 'tailwind'].includes(css),
+    `engines.styles must be one of: scss, css, tailwind (got: ${css})`,
   )
   req(['esbuild'].includes(js), `engines.scripts must be "esbuild" (got: ${js})`)
 }
 
-const validatePaths = (paths) => {
+const validatePaths = paths => {
   req(isPlainObject(paths), 'config/paths must export an object')
 
-  // required top-level
   for (const k of ['root', 'src', 'dist', 'public', 'out']) {
     reqString(paths[k], `paths.${k}`)
   }
 
-  // required blocks used by pipelines
   req(isPlainObject(paths.pages), 'paths.pages must be an object')
   reqString(paths.pages.entry, 'paths.pages.entry')
 
@@ -229,7 +222,8 @@ const validateProject = ({ stage, project }) => {
     stage,
   })
   reqNum(project.server.port, 'project.server.port')
-  for (const k of ['open', 'notify', 'ui', 'cors']) reqBool(project.server[k], `project.server.${k}`)
+  for (const k of ['open', 'notify', 'ui', 'cors'])
+    reqBool(project.server[k], `project.server.${k}`)
 
   req(isPlainObject(project.watch), 'project.watch must be an object')
   reportUnknownKeys({
@@ -239,7 +233,10 @@ const validateProject = ({ stage, project }) => {
     stage,
   })
   reqNum(project.watch.debounceMs, 'project.watch.debounceMs')
-  req(isPlainObject(project.watch.awaitWriteFinish), 'project.watch.awaitWriteFinish must be an object')
+  req(
+    isPlainObject(project.watch.awaitWriteFinish),
+    'project.watch.awaitWriteFinish must be an object',
+  )
 }
 
 const validateSite = ({ stage, site }) => {
@@ -255,7 +252,6 @@ const validateSite = ({ stage, site }) => {
   req(typeof site.siteUrl === 'string', 'site.siteUrl must be a string')
   req(typeof site.basePath === 'string', 'site.basePath must be a string')
 
-  // Soft validation: only complain in strict stages.
   if (site.siteUrl) {
     const ok = /^https?:\/\//i.test(site.siteUrl)
     if (!ok) {
@@ -264,21 +260,20 @@ const validateSite = ({ stage, site }) => {
       else throw new Error(msg)
     }
   }
-
-  // Normalize basePath shape: '' or '/xxx' (no trailing slash)
-  // (We keep the normalized value, so downstream URL builders are consistent.)
 }
 
-const normalizeSite = (site) => {
+const normalizeSite = site => {
   const out = { ...site }
   let bp = String(out.basePath || '').trim()
   if (bp === '/') bp = ''
   if (bp && !bp.startsWith('/')) bp = `/${bp}`
-  // remove trailing slashes
+
   bp = bp.replace(/\/+$/g, '')
   out.basePath = bp
 
-  out.siteUrl = String(out.siteUrl || '').trim().replace(/\/+$/g, '')
+  out.siteUrl = String(out.siteUrl || '')
+    .trim()
+    .replace(/\/+$/g, '')
 
   return out
 }
@@ -289,11 +284,21 @@ const validateFeatures = ({ stage, features }) => {
   reportUnknownKeys({
     scope: 'config/features',
     obj: features,
-    allowed: ['notifications', 'i18n', 'seo', 'versioning', 'favicons', 'svgSprite', 'static', 'media', 'quality', 'reports'],
+    allowed: [
+      'notifications',
+      'i18n',
+      'seo',
+      'versioning',
+      'favicons',
+      'svgSprite',
+      'static',
+      'media',
+      'quality',
+      'reports',
+    ],
     stage,
   })
 
-  // Light type checks (we validate only the most load-bearing fields)
   const chkEnabled = (obj, name) => {
     if (!isPlainObject(obj)) return
     if ('enabled' in obj) reqBool(obj.enabled, `${name}.enabled`)
@@ -339,8 +344,6 @@ const validateFeatures = ({ stage, features }) => {
   }
 }
 
-// --- public API -------------------------------------------------------------
-
 let cache = null
 
 /**
@@ -359,7 +362,6 @@ export const getConfig = ({ stage } = {}) => {
   const features = deepMerge(DEFAULTS.features, rawFeatures)
   validateFeatures({ stage, features })
 
-  // paths are computed; we validate required shape.
   validatePaths(rawPaths)
 
   const project = deepMerge(DEFAULTS.project, rawProject)
@@ -368,7 +370,6 @@ export const getConfig = ({ stage } = {}) => {
   const site = normalizeSite(deepMerge(DEFAULTS.site, rawSite))
   validateSite({ stage, site })
 
-  // plugins: don't validate deeply (it is runtime objects), but ensure object
   req(isPlainObject(rawPlugins), 'config/plugins must export an object')
 
   cache = Object.freeze({

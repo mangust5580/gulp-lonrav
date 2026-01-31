@@ -1,21 +1,7 @@
-// gulp/core/module-contract.js
-// Runtime validation for the module registry.
-//
-// Goal: keep registry edits safe and predictable (no silent typos).
-//
-// Minimal module contract:
-// - id: string
-// - kind?: 'compile' | 'watch'
-// - order?: number
-// - dependsOn?: string[]
-// - enabled?: (ctx:any) => boolean
-// - tasks?: { dev?: Function, build?: Function, preview?: Function }
-// - watch?: (ctx:any)=>Array<{key:string, globs:string|string[], task:Function, action:'reload'|'task'}>
-
 import { STAGES } from '#gulp/constants.js'
 
-const isFn = (v) => typeof v === 'function'
-const isStr = (v) => typeof v === 'string'
+const isFn = v => typeof v === 'function'
+const isStr = v => typeof v === 'string'
 
 const ensure = (cond, message) => {
   if (!cond) throw new Error(message)
@@ -41,13 +27,15 @@ const validateWatch = (id, watch) => {
 
 const validateTasks = (id, kind, tasks) => {
   if (tasks == null) {
-    // watch-only modules can omit tasks.
     if (kind === 'watch') return
-    // compile modules may also be watch-only (rare) but we keep registry strict.
+
     ensure(false, fmt(id, 'tasks is required for compile modules'))
   }
 
-  ensure(tasks && typeof tasks === 'object' && !Array.isArray(tasks), fmt(id, 'tasks must be an object'))
+  ensure(
+    tasks && typeof tasks === 'object' && !Array.isArray(tasks),
+    fmt(id, 'tasks must be an object'),
+  )
 
   const keys = Object.keys(tasks)
   for (const k of keys) {
@@ -55,7 +43,6 @@ const validateTasks = (id, kind, tasks) => {
     ensure(isFn(tasks[k]), fmt(id, `tasks.${k} must be a function`))
   }
 
-  // compile modules should have at least one stage task.
   if (kind !== 'watch') {
     ensure(keys.length > 0, fmt(id, 'tasks must define at least one stage task'))
   }
@@ -65,7 +52,7 @@ const validateTasks = (id, kind, tasks) => {
  * Validates the registry shape and common pitfalls.
  * Throws on any inconsistency.
  */
-export const validateModuleRegistry = (modules) => {
+export const validateModuleRegistry = modules => {
   ensure(Array.isArray(modules), '[registry] modules must be an array')
 
   const ids = new Set()
@@ -80,7 +67,10 @@ export const validateModuleRegistry = (modules) => {
 
     if (m.kind != null) {
       ensure(isStr(m.kind), fmt(id, 'kind must be a string'))
-      ensure(m.kind === 'compile' || m.kind === 'watch', fmt(id, 'kind must be "compile" | "watch"'))
+      ensure(
+        m.kind === 'compile' || m.kind === 'watch',
+        fmt(id, 'kind must be "compile" | "watch"'),
+      )
     }
 
     if (m.order != null) {
@@ -95,7 +85,6 @@ export const validateModuleRegistry = (modules) => {
     validateWatch(id, m.watch)
   }
 
-  // Second pass: validate dependsOn against known ids
   for (const m of modules) {
     validateDependsOn(m.id, m.dependsOn, ids)
   }
@@ -106,19 +95,21 @@ export const validateModuleRegistry = (modules) => {
 /**
  * Validates expanded watch rules (after calling module.watch()).
  */
-export const validateWatchRules = (rules) => {
+export const validateWatchRules = rules => {
   ensure(Array.isArray(rules), '[registry] watch rules must be an array')
   for (const r of rules) {
     ensure(r && typeof r === 'object', '[registry] watch rule must be an object')
     ensure(isStr(r.key) && r.key.trim(), '[registry] watch rule "key" must be a non-empty string')
 
     const globsOk =
-      isStr(r.globs) ||
-      (Array.isArray(r.globs) && r.globs.every((g) => isStr(g) && g.trim()))
+      isStr(r.globs) || (Array.isArray(r.globs) && r.globs.every(g => isStr(g) && g.trim()))
     ensure(globsOk, `[registry] watch rule "${r.key}": globs must be a string or string[]`)
 
     ensure(isFn(r.task), `[registry] watch rule "${r.key}": task must be a function`)
-    ensure(r.action === 'reload' || r.action === 'task', `[registry] watch rule "${r.key}": action must be "reload" | "task"`)
+    ensure(
+      r.action === 'reload' || r.action === 'task',
+      `[registry] watch rule "${r.key}": action must be "reload" | "task"`,
+    )
   }
 
   return rules

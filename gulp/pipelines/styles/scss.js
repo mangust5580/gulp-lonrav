@@ -15,7 +15,6 @@ export const stylesScss = async () => {
   const postcssPlugins = await getPostcssPlugins('scss')
 
   return gulp
-    // fail-fast: no allowEmpty
     .src(paths.styles.entryScss)
     .pipe(withPlumber('styles:scss'))
     .pipe(plugins.gulpIf(styles.sourcemaps, plugins.sourcemaps.init()))
@@ -23,6 +22,6 @@ export const stylesScss = async () => {
     .pipe(plugins.postcss(postcssPlugins))
     .pipe(plugins.gulpIf(styles.sourcemaps, plugins.sourcemaps.write('.')))
     .pipe(gulp.dest(path.join(paths.out, paths.styles.dest)))
-    // Stream only CSS to BrowserSync (ignore sourcemaps to reduce log noise)
+
     .pipe(plugins.browserSync.stream({ match: '**/*.css' }))
 }
