@@ -1,0 +1,100 @@
+{
+  "name": "gulp-lonrav",
+  "version": "0.1.0-rc.1",
+  "type": "module",
+  "description": "Modern modular Gulp 5 build for static sites (landings, multipage).",
+  "license": "MIT",
+  "imports": {
+    "#config/*": "./config/*",
+    "#gulp/*": "./gulp/*"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "gulp",
+    "build": "gulp build",
+    "build:fast": "gulp buildFast",
+    "preview": "gulp preview",
+    "clean": "gulp clean",
+    "lint": "eslint . && stylelint \"src/**/*.{css,scss}\"",
+    "format": "prettier -w .",
+    "check": "npm run lint && npm run build"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "eslint": "^9.39.2",
+    "gulp": "^5.0.1",
+    "fast-glob": "^3.3.3",
+    "globals": "^17.0.0",
+    "posthtml": "^0.16.7",
+    "prettier": "^3.7.4",
+    "stylelint": "^16.26.1",
+    "stylelint-config-standard": "^39.0.1",
+    "stylelint-config-standard-scss": "^16.0.0",
+    "svgo": "^4.0.0",
+    "through2": "^4.0.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "esbuild",
+      "sharp",
+      "ttf2woff2"
+    ]
+  },
+  "exports": {
+    ".": "./gulp/public/index.js",
+    "./public": "./gulp/public/index.js"
+  },
+  "dependencies": {
+    "browser-sync": "^3.0.4",
+    "del": "^8.0.1",
+    "esbuild": "^0.27.2",
+    "gulp-file-include": "^2.3.0",
+    "gulp-if": "^3.0.0",
+    "gulp-plumber": "^1.2.1",
+    "gulp-postcss": "^10.0.0",
+    "gulp-posthtml": "^3.0.5",
+    "gulp-rev": "^10.0.0",
+    "gulp-rev-rewrite": "^6.0.0",
+    "gulp-sass": "^6.0.1",
+    "gulp-sourcemaps": "^3.0.0",
+    "gulp-svg-sprite": "^2.0.3",
+    "gulp-ttf2woff2": "^5.0.0",
+    "postcss": "^8.5.6",
+    "sass": "^1.97.2",
+    "sharp": "^0.34.5",
+    "posthtml-expressions": "^1.11.4",
+    "html-minifier-terser": "^7.2.0",
+    "sitemap": "^8.0.0",
+    "autoprefixer": "^10.4.23",
+    "cssnano": "^7.1.2",
+    "png-to-ico": "^3.0.1"
+  },
+  "files": [
+    "gulp/",
+    "config/",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "keywords": [
+    "gulp",
+    "gulp5",
+    "static-site",
+    "frontend",
+    "build",
+    "landing-page",
+    "multipage",
+    "sass",
+    "postcss",
+    "esbuild"
+  ],
+  "peerDependencies": {
+    "gulp": "^5.0.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
