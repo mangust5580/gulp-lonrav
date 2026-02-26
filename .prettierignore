@@ -1,6 +1,0 @@
-node_modules
-dist
-public
-coverage
-**/*.min.css
-**/*.map
