@@ -8,6 +8,7 @@ import { env } from '#gulp/utils/env.js'
 
 export const scriptsEsbuild = async () => {
   const outdir = path.join(paths.out, paths.scripts.dest)
+  const splitting = Boolean(scripts.splitting)
 
   await esbuild({
     entryPoints: [paths.scripts.entry],
@@ -17,9 +18,10 @@ export const scriptsEsbuild = async () => {
     sourcemap: scripts.sourcemaps,
     minify: scripts.minify,
     target: scripts.target,
-    format: scripts.format,
+    // esbuild requires ESM output when code splitting is enabled.
+    format: splitting ? 'esm' : scripts.format,
     platform: 'browser',
-    splitting: true,
+    splitting,
     logLevel: 'info',
   })
   if (env.isDev) plugins.browserSync.reload()

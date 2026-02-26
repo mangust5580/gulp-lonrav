@@ -1,0 +1,38 @@
+stages:
+  - quality
+  - validate
+
+cache:
+  key:
+    files:
+      - package-lock.json
+  paths:
+    - .npm/
+
+variables:
+  NODE_ENV: "production"
+
+quality:gates:
+  stage: quality
+  image: node:20
+  script:
+    - npm ci --cache .npm --prefer-offline --no-audit
+    - npm run lint:report
+  artifacts:
+    when: always
+    paths:
+      - reports/*.json
+    expire_in: 7 days
+
+validate:build:
+  stage: validate
+  image: node:20
+  script:
+    - npm ci --cache .npm --prefer-offline --no-audit
+    # On MRs keep it fast; on main do full build
+    - |
+      if [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ]; then
+        npm run build:fast
+      else
+        npm run build
+      fi

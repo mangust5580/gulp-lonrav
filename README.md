@@ -88,7 +88,8 @@ npm run preview
 
 - **`dev`** — development server with watch mode and live reload
 - **`build`** — production build with all optimisations
-- **`buildFast`** — faster build (skips heavy optimisations, see [Profiles](#profiles) below)
+- **`build:fast`** — faster production build (uses `basic` profile; skips heavy optimisations, see [Profiles](#profiles) below)
+- **`buildFast`** — gulp task used by `build:fast`
 - **`preview`** — serve the compiled production output
 - **`clean`** — remove build output (clears `dist/` and `public/`)
 - **`check`** — run linters and attempt a full build (CI/self‑check)
@@ -138,7 +139,8 @@ CSS output is autoprefixed and minified in production.
 ### JavaScript bundling
 
 JavaScript/TypeScript modules are bundled using [esbuild](https://esbuild.github.io/) for blazing fast builds.  
-Code splitting is supported when you use dynamic imports.
+Code splitting (dynamic import chunks) is supported but **disabled by default** (faster builds, simpler output).  
+Enable it via `config/scripts.js` / user config override: `scripts.splitting: true`.
 
 ### Assets processing
 
@@ -152,15 +154,25 @@ CSS changes are injected without a full page reload; other changes trigger a rel
 
 ### Quality tools
 
-Linting and formatting are baked in.  
-- **ESLint** for JavaScript/TypeScript code
-- **Stylelint** for styles (SCSS/PostCSS/Tailwind)
-- **Prettier** for consistent formatting
+Quality gates are included:
 
-These tools run automatically when you start `npm run dev` and on the `check` script.  
-You can adjust rules and strictness via `eslint.config.js` and `stylelint.config.js` in the project root.
+- **ESLint** for JS/TS (`eslint.config.js`, root)
+- **Stylelint** for styles (`stylelint.config.js`, root)
+- **Prettier** for formatting (`prettier.config.js`, root)
+
+Scripts:
+
+- `npm run lint` — ESLint + Stylelint (fails on errors)
+- `npm run lint:report` — generates machine-readable reports:
+  - `reports/eslint.json`
+  - `reports/stylelint.json`
+- `npm run check` — `lint` + full `build`
+- `npm run ci:quality` — `lint:report` + `validate` (defaults to `build:fast`)
+
+Note: Prettier is **not** a CI gate by default — run `npm run format` locally to apply formatting.
 
 ### Optional template engines
+
 
 Pipelines for the following template engines are included but not installed by default:
 
@@ -234,7 +246,7 @@ To add localisation support:
 3. In your templates, use the `$t('key')` helper to insert translated strings.  
    The build will generate separate versions of each page for every locale.
 
-For more details, consult the docs page at `/docs/index.html` once you run `npm run dev`.
+For more details, consult the docs page at `/docs.html` once you run `npm run dev`.
 
 ---
 
@@ -267,13 +279,18 @@ You can mix Tailwind with Sass or plain CSS by importing the generated `tailwind
 
 ## Profiles
 
-The build supports optional “profiles” that toggle groups of features.  
-This is useful for controlling build time vs. quality on large projects.
+Profiles toggle groups of features (trade-off: build time vs. output/QA).
 
-- **Basic** — disables heavy optimisations like image conversion to AVIF, favicons generation and asset rev‑hashing.  
-- **Full** (default) — runs all optimisations and validations.  
+- **`full`** (default) — all optimisations and checks enabled.
+- **`basic`** — disables heavy/optional steps:
+  - `favicons`
+  - `svgSprite`
+  - `static`
+  - `media` transcode/copy
+  - `versioning` (rev-hash)
+  - `reports.bundleSizes`
 
-Specify a profile via environment variable or CLI parameter:
+Specify a profile via env var or CLI:
 
 ```bash
 GULP_LONRAV_PROFILE=basic npm run build
@@ -281,14 +298,17 @@ GULP_LONRAV_PROFILE=basic npm run build
 npm run build -- --profile basic
 ```
 
-You can define your own profile in `config/profiles.js` to customise which modules are enabled in different scenarios.
+Where profiles live:
+
+- Built-in profiles are defined in `config/features.js` (`profiles` object).
+- For project-specific overrides, create `config.js` in the repo root and override `features` (it is deep-merged at runtime).
 
 ---
 
 ## Documentation
 
-A detailed interactive documentation is bundled with the project.  
-Once you run `npm run dev` you can open `/docs/index.html` in your browser to explore:
+A detailed interactive documentation page is bundled with the project.
+Once you run `npm run dev`, open `/docs.html` in your browser to explore:
 
 - Full explanation of the folder structure and conventions
 - Step‑by‑step guides for enabling features (i18n, Tailwind, favicons)

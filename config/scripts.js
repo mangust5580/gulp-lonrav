@@ -8,6 +8,12 @@ const baseScripts = {
   minify: env.isProd,
   target: 'es2018',
   format: 'esm',
+  /**
+   * Code splitting (dynamic import chunks).
+   * Default: off (faster builds, simpler output).
+   * Requires ESM output when enabled.
+   */
+  splitting: false,
   outfile: 'main.js',
 }
 

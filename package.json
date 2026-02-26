@@ -14,12 +14,15 @@
   "scripts": {
     "dev": "gulp",
     "build": "gulp build",
-    "build:fast": "gulp buildFast",
+    "build:fast": "gulp buildFast --profile basic",
     "preview": "gulp preview",
     "clean": "gulp clean",
     "lint": "eslint . && stylelint \"src/**/*.{css,scss}\"",
     "format": "prettier -w .",
-    "check": "npm run lint && npm run build"
+    "check": "npm run lint && npm run build",
+    "lint:report": "node ./scripts/lint-report.mjs",
+    "validate": "npm run build:fast",
+    "ci:quality": "npm run lint:report && npm run validate"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
@@ -75,8 +78,7 @@
     "gulp/",
     "config/",
     "README.md",
-    "LICENSE",
-    "CHANGELOG.md"
+    "LICENSE"
   ],
   "keywords": [
     "brandboost",

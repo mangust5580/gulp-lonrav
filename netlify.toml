@@ -1,0 +1,14 @@
+[build]
+  # Production deploys
+  command = "npm run build"
+  publish = "public"
+
+  [build.environment]
+    NODE_VERSION = "20"
+
+# Faster builds for previews/branch deploys.
+[context.deploy-preview]
+  command = "npm run build:fast"
+
+[context.branch-deploy]
+  command = "npm run build:fast"
